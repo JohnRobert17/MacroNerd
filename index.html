@@ -309,7 +309,7 @@
 
                 } catch (error) {
                     console.error("Error in getMacrosFromAI:", error);
-                    throw new Error("Failed to get macro data from AI."); // This will be caught by handleAddFood
+                    throw new Error(`Failed to get macro data from AI: ${error.message}`); // This will be caught by handleAddFood
                 }
             }
 
@@ -338,8 +338,7 @@
                     capturePhotoButton.classList.remove('hidden');
                     
                 } catch (error) {
-                    console.error('Error accessing camera:', error);
-                    showError('Unable to access camera. Please check permissions.');
+                    showError('Unable to access camera. Please check permissions.', error, 'camera-access');
                 }
             }
 
@@ -419,8 +418,7 @@
                     detectionModal.classList.remove('hidden');
                     
                 } catch (error) {
-                    console.error('Error analyzing image:', error);
-                    showError('Failed to analyze food image. Please try again.');
+                    showError('Failed to analyze food image. Please try again.', error, 'image-analysis');
                 } finally {
                     setLoading(false);
                 }
@@ -434,7 +432,7 @@
                 const quantity = quantityInput.value.trim();
                 
                 if (!quantity) {
-                    showError('Please enter a quantity');
+                    showError('Please enter a quantity', null, 'detection-validation');
                     return;
                 }
                 
@@ -464,17 +462,41 @@
                     foodInput.value = '';
                     
                 } catch (error) {
-                    console.error('Error adding detected food:', error);
-                    showError(error.message);
+                    showError(error.message, error, 'detection-confirmation');
                 } finally {
                     setLoading(false);
                 }
             }
 
             /**
-             * Shows error message
+             * Enhanced error logging and display function
              */
-            function showError(message) {
+            function showError(message, error = null, context = '') {
+                const timestamp = new Date().toISOString();
+                
+                // Enhanced console logging
+                console.error(`\n🚨 FRONTEND ERROR [${timestamp}] ${context ? `[${context}] ` : ''}`);
+                console.error('Error Message:', message);
+                
+                if (error) {
+                    console.error('Error Object:', {
+                        name: error.name,
+                        message: error.message,
+                        stack: error.stack
+                    });
+                    
+                    if (error.response) {
+                        console.error('Response Details:', {
+                            status: error.response.status,
+                            statusText: error.response.statusText,
+                            data: error.response.data
+                        });
+                    }
+                }
+                
+                console.error('=====================================\n');
+                
+                // Display error to user
                 errorMessage.textContent = message;
                 errorMessage.classList.remove('hidden');
                 setTimeout(() => {
@@ -626,10 +648,7 @@
                     foodInput.value = '';
 
                 } catch (error) {
-                    console.error("Failed to fetch macro data:", error);
-                    // Show user-friendly error
-                    errorMessage.textContent = `Error: ${error.message}. Please try again.`;
-                    errorMessage.classList.remove('hidden');
+                    showError(`Error: ${error.message}. Please try again.`, error, 'add-food');
                 } finally {
                     setLoading(false);
                 }
@@ -668,12 +687,38 @@
                 renderUI();
             }
 
+            // Test Environment Functions
+            
+            /**
+             * Tests the environment setup by calling the test endpoint
+             */
+            async function testEnvironment() {
+                try {
+                    console.log('🧪 Testing environment setup...');
+                    const response = await fetch('/api/test-env');
+                    const envData = await response.json();
+                    
+                    console.log('✅ Environment Test Results:', envData);
+                    
+                    if (envData.status === 'MISSING_API_KEY') {
+                        showError('⚠️ GEMINI_API_KEY is not configured. Some features may not work.', null, 'env-test');
+                    } else {
+                        console.log('✅ Environment is properly configured');
+                    }
+                    
+                    return envData;
+                } catch (error) {
+                    showError('Failed to test environment setup', error, 'env-test');
+                    return null;
+                }
+            }
+
             // Initialization
             
             /**
              * Initializes the application.
              */
-            function init() {
+            async function init() {
                 // Attach event listeners
                 foodForm.addEventListener('submit', handleAddFood);
                 
@@ -705,6 +750,9 @@
                 // Load initial data and render
                 loadFromStorage();
                 renderUI();
+                
+                // Test environment setup
+                await testEnvironment();
             }
             
             init(); // Run the app

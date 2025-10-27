@@ -6,6 +6,82 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Environment variable checking and logging
+function checkEnvironmentVariables() {
+    console.log('\n=== ENVIRONMENT VARIABLES CHECK ===');
+    
+    const requiredEnvVars = {
+        'GEMINI_API_KEY': process.env.GEMINI_API_KEY,
+        'NODE_ENV': process.env.NODE_ENV || 'development',
+        'PORT': process.env.PORT || '3000'
+    };
+    
+    const optionalEnvVars = {
+        'DEBUG': process.env.DEBUG,
+        'LOG_LEVEL': process.env.LOG_LEVEL || 'info'
+    };
+    
+    console.log('Required Environment Variables:');
+    Object.entries(requiredEnvVars).forEach(([key, value]) => {
+        if (value) {
+            console.log(`✅ ${key}: ${key === 'GEMINI_API_KEY' ? '[SET]' : value}`);
+        } else {
+            console.log(`❌ ${key}: NOT SET`);
+        }
+    });
+    
+    console.log('\nOptional Environment Variables:');
+    Object.entries(optionalEnvVars).forEach(([key, value]) => {
+        if (value) {
+            console.log(`ℹ️  ${key}: ${value}`);
+        } else {
+            console.log(`⚪ ${key}: NOT SET`);
+        }
+    });
+    
+    console.log('\n=== ENVIRONMENT STATUS ===');
+    if (requiredEnvVars.GEMINI_API_KEY) {
+        console.log('✅ Environment is properly configured');
+    } else {
+        console.log('❌ WARNING: GEMINI_API_KEY is not set!');
+        console.log('   Please create a .env file with: GEMINI_API_KEY=your_api_key_here');
+    }
+    console.log('=====================================\n');
+}
+
+// Enhanced error logging function
+function logError(error, context = '') {
+    const timestamp = new Date().toISOString();
+    console.error(`\n🚨 ERROR [${timestamp}] ${context ? `[${context}] ` : ''}`);
+    console.error('Error Details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+    });
+    
+    if (error.response) {
+        console.error('Response Details:', {
+            status: error.response.status,
+            statusText: error.response.statusText,
+            data: error.response.data
+        });
+    }
+    
+    console.error('=====================================\n');
+}
+
+// Enhanced info logging function
+function logInfo(message, data = null) {
+    const timestamp = new Date().toISOString();
+    console.log(`ℹ️  INFO [${timestamp}] ${message}`);
+    if (data) {
+        console.log('Data:', data);
+    }
+}
+
+// Check environment on startup
+checkEnvironmentVariables();
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -16,13 +92,17 @@ app.post('/api/get-macros', async (req, res) => {
     try {
         const { query } = req.body;
         
+        logInfo('Received macro request', { query: query?.substring(0, 50) + '...' });
+        
         if (!query) {
+            logError(new Error('Query is required'), 'get-macros');
             return res.status(400).json({ error: 'Query is required' });
         }
 
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
-            console.error('GEMINI_API_KEY not found in environment variables');
+            const error = new Error('GEMINI_API_KEY not found in environment variables');
+            logError(error, 'get-macros');
             return res.status(500).json({ error: 'API key not configured' });
         }
 
@@ -80,7 +160,7 @@ All values should be numbers (integers). Do not return any text, explanation, or
                         throw new Error(`Server error: ${response.status}`);
                     }
                     const errorBody = await response.text();
-                    console.error("API Error Response:", errorBody);
+                    logError(new Error(`API Error Response: ${errorBody}`), 'get-macros');
                     return res.status(response.status).json({ error: `API request failed: ${response.status}` });
                 }
 
@@ -99,15 +179,16 @@ All values should be numbers (integers). Do not return any text, explanation, or
                     macros.carbs = Number(macros.carbs) || 0;
                     macros.fat = Number(macros.fat) || 0;
 
+                    logInfo('Successfully processed macro request', { name: macros.name, calories: macros.calories });
                     return res.json(macros);
                 } else {
-                    console.error("Invalid API response structure:", result);
+                    logError(new Error(`Invalid API response structure: ${JSON.stringify(result)}`), 'get-macros');
                     return res.status(500).json({ error: "AI returned an invalid response" });
                 }
 
             } catch (error) {
                 if (i === maxRetries - 1) {
-                    console.error("Error in getMacrosFromAI:", error);
+                    logError(error, 'get-macros');
                     return res.status(500).json({ error: "Failed to get macro data from AI" });
                 }
                 await new Promise(resolve => setTimeout(resolve, delay));
@@ -116,7 +197,7 @@ All values should be numbers (integers). Do not return any text, explanation, or
         }
 
     } catch (error) {
-        console.error('Server error:', error);
+        logError(error, 'get-macros');
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -126,13 +207,17 @@ app.post('/api/analyze-image', async (req, res) => {
     try {
         const { image } = req.body;
         
+        logInfo('Received image analysis request', { imageSize: image?.length || 0 });
+        
         if (!image) {
+            logError(new Error('Image is required'), 'analyze-image');
             return res.status(400).json({ error: 'Image is required' });
         }
 
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
-            console.error('GEMINI_API_KEY not found in environment variables');
+            const error = new Error('GEMINI_API_KEY not found in environment variables');
+            logError(error, 'analyze-image');
             return res.status(500).json({ error: 'API key not configured' });
         }
 
@@ -189,7 +274,7 @@ Do not return any text, explanation, or markdown formatting around the JSON obje
                         throw new Error(`Server error: ${response.status}`);
                     }
                     const errorBody = await response.text();
-                    console.error("API Error Response:", errorBody);
+                    logError(new Error(`API Error Response: ${errorBody}`), 'analyze-image');
                     return res.status(response.status).json({ error: `API request failed: ${response.status}` });
                 }
 
@@ -202,15 +287,16 @@ Do not return any text, explanation, or markdown formatting around the JSON obje
                     const jsonText = result.candidates[0].content.parts[0].text;
                     const analysis = JSON.parse(jsonText);
                     
+                    logInfo('Successfully analyzed image', { foodName: analysis.foodName });
                     return res.json(analysis);
                 } else {
-                    console.error("Invalid API response structure:", result);
+                    logError(new Error(`Invalid API response structure: ${JSON.stringify(result)}`), 'analyze-image');
                     return res.status(500).json({ error: "AI returned an invalid response" });
                 }
 
             } catch (error) {
                 if (i === maxRetries - 1) {
-                    console.error("Error in analyze-image:", error);
+                    logError(error, 'analyze-image');
                     return res.status(500).json({ error: "Failed to analyze image" });
                 }
                 await new Promise(resolve => setTimeout(resolve, delay));
@@ -219,8 +305,45 @@ Do not return any text, explanation, or markdown formatting around the JSON obje
         }
 
     } catch (error) {
-        console.error('Server error:', error);
+        logError(error, 'analyze-image');
         res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Test endpoint to verify environment setup
+app.get('/api/test-env', (req, res) => {
+    try {
+        logInfo('Environment test endpoint accessed');
+        
+        const envStatus = {
+            timestamp: new Date().toISOString(),
+            environment: {
+                NODE_ENV: process.env.NODE_ENV || 'development',
+                PORT: process.env.PORT || '3000',
+                DEBUG: process.env.DEBUG || 'not set',
+                LOG_LEVEL: process.env.LOG_LEVEL || 'info'
+            },
+            apiKeys: {
+                GEMINI_API_KEY: process.env.GEMINI_API_KEY ? '[SET]' : '[NOT SET]'
+            },
+            server: {
+                uptime: process.uptime(),
+                memory: process.memoryUsage(),
+                version: process.version,
+                platform: process.platform
+            },
+            status: process.env.GEMINI_API_KEY ? 'READY' : 'MISSING_API_KEY'
+        };
+        
+        logInfo('Environment test completed', { status: envStatus.status });
+        res.json(envStatus);
+        
+    } catch (error) {
+        logError(error, 'test-env');
+        res.status(500).json({ 
+            error: 'Failed to check environment',
+            timestamp: new Date().toISOString()
+        });
     }
 });
 

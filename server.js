@@ -121,6 +121,109 @@ All values should be numbers (integers). Do not return any text, explanation, or
     }
 });
 
+// API endpoint to analyze food images
+app.post('/api/analyze-image', async (req, res) => {
+    try {
+        const { image } = req.body;
+        
+        if (!image) {
+            return res.status(400).json({ error: 'Image is required' });
+        }
+
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            console.error('GEMINI_API_KEY not found in environment variables');
+            return res.status(500).json({ error: 'API key not configured' });
+        }
+
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+        const systemPrompt = `You are a food recognition expert. Analyze the provided food image and identify what food items are visible. Return *ONLY* a single JSON object with the following exact structure:
+{
+  "foodName": "The primary food item detected (e.g., 'apple', 'chicken breast', 'rice')",
+  "suggestedQuantity": "A reasonable suggested quantity (e.g., '1 medium', '150g', '2 pieces')"
+}
+Do not return any text, explanation, or markdown formatting around the JSON object.`;
+
+        const schema = {
+            type: "OBJECT",
+            properties: {
+                "foodName": { "type": "STRING" },
+                "suggestedQuantity": { "type": "STRING" }
+            },
+            required: ["foodName", "suggestedQuantity"]
+        };
+
+        const payload = {
+            contents: [{
+                parts: [
+                    { text: systemPrompt },
+                    {
+                        inline_data: {
+                            mime_type: "image/jpeg",
+                            data: image
+                        }
+                    }
+                ]
+            }],
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: schema
+            }
+        };
+
+        // Fetch with retry logic
+        let delay = 1000;
+        const maxRetries = 3;
+        
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    if (response.status >= 500 || response.status === 429) {
+                        throw new Error(`Server error: ${response.status}`);
+                    }
+                    const errorBody = await response.text();
+                    console.error("API Error Response:", errorBody);
+                    return res.status(response.status).json({ error: `API request failed: ${response.status}` });
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    
+                    const jsonText = result.candidates[0].content.parts[0].text;
+                    const analysis = JSON.parse(jsonText);
+                    
+                    return res.json(analysis);
+                } else {
+                    console.error("Invalid API response structure:", result);
+                    return res.status(500).json({ error: "AI returned an invalid response" });
+                }
+
+            } catch (error) {
+                if (i === maxRetries - 1) {
+                    console.error("Error in analyze-image:", error);
+                    return res.status(500).json({ error: "Failed to analyze image" });
+                }
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2;
+            }
+        }
+
+    } catch (error) {
+        console.error('Server error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Serve the main HTML file
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));

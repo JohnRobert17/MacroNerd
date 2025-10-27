@@ -36,6 +36,14 @@
                 class="flex-1 bg-gray-800 border-2 border-gray-700 text-gray-100 placeholder-gray-500 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition"
             >
             <button 
+                type="button" 
+                id="camera-button"
+                class="bg-blue-500 text-white font-bold px-4 py-3 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-900 transition disabled:opacity-50"
+                title="Take photo of food"
+            >
+                📷
+            </button>
+            <button 
                 type="submit" 
                 id="add-button"
                 class="bg-emerald-500 text-white font-bold px-5 py-3 rounded-lg shadow-md hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-gray-900 transition disabled:opacity-50"
@@ -46,6 +54,80 @@
 
         <!-- Error Message Display -->
         <div id="error-message" class="text-red-400 text-center mb-4 hidden"></div>
+
+        <!-- Camera Modal -->
+        <div id="camera-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-gray-800 rounded-lg max-w-md w-full max-h-[90vh] overflow-hidden">
+                <div class="p-4 border-b border-gray-700">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-semibold text-gray-100">Take Food Photo</h3>
+                        <button id="close-camera" class="text-gray-400 hover:text-gray-200">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div id="camera-container" class="relative">
+                        <video id="camera-video" class="w-full h-64 bg-gray-900 rounded-lg object-cover hidden"></video>
+                        <canvas id="camera-canvas" class="hidden"></canvas>
+                        <div id="camera-placeholder" class="w-full h-64 bg-gray-900 rounded-lg flex items-center justify-center text-gray-400">
+                            <div class="text-center">
+                                <svg class="w-16 h-16 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                <p>Camera will appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex gap-3">
+                        <button id="start-camera" class="flex-1 bg-blue-500 text-white font-bold py-3 rounded-lg hover:bg-blue-600 transition">
+                            Start Camera
+                        </button>
+                        <button id="capture-photo" class="flex-1 bg-emerald-500 text-white font-bold py-3 rounded-lg hover:bg-emerald-600 transition hidden">
+                            Capture Photo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Food Detection Confirmation Modal -->
+        <div id="detection-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-gray-800 rounded-lg max-w-md w-full max-h-[90vh] overflow-hidden">
+                <div class="p-4 border-b border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-100">Confirm Food Detection</h3>
+                </div>
+                <div class="p-4">
+                    <div class="mb-4">
+                        <img id="captured-image" class="w-full h-48 bg-gray-900 rounded-lg object-cover" alt="Captured food">
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-gray-300 mb-2">AI detected:</p>
+                        <p id="detected-food" class="text-lg font-semibold text-emerald-400"></p>
+                    </div>
+                    <div class="mb-4">
+                        <label for="quantity-input" class="block text-gray-300 mb-2">Quantity:</label>
+                        <input 
+                            type="text" 
+                            id="quantity-input" 
+                            placeholder="e.g., 1 large, 200g, 2 pieces"
+                            class="w-full bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                        >
+                    </div>
+                    <div class="flex gap-3">
+                        <button id="confirm-detection" class="flex-1 bg-emerald-500 text-white font-bold py-3 rounded-lg hover:bg-emerald-600 transition">
+                            Confirm & Add
+                        </button>
+                        <button id="cancel-detection" class="flex-1 bg-gray-600 text-white font-bold py-3 rounded-lg hover:bg-gray-700 transition">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Totals Display -->
         <div class="bg-gray-800 rounded-xl shadow-lg p-4 mb-6">
@@ -137,9 +219,29 @@
             const cancelResetButton = document.getElementById('cancel-reset-button');
             const confirmResetButton = document.getElementById('confirm-reset-button');
 
+            // Camera Elements
+            const cameraButton = document.getElementById('camera-button');
+            const cameraModal = document.getElementById('camera-modal');
+            const closeCameraButton = document.getElementById('close-camera');
+            const startCameraButton = document.getElementById('start-camera');
+            const capturePhotoButton = document.getElementById('capture-photo');
+            const cameraVideo = document.getElementById('camera-video');
+            const cameraCanvas = document.getElementById('camera-canvas');
+            const cameraPlaceholder = document.getElementById('camera-placeholder');
+            
+            // Detection Modal Elements
+            const detectionModal = document.getElementById('detection-modal');
+            const capturedImage = document.getElementById('captured-image');
+            const detectedFood = document.getElementById('detected-food');
+            const quantityInput = document.getElementById('quantity-input');
+            const confirmDetectionButton = document.getElementById('confirm-detection');
+            const cancelDetectionButton = document.getElementById('cancel-detection');
+
             // App State
             const STORAGE_KEY = 'aiMacroTrackerItems';
             let foodItems = [];
+            let stream = null;
+            let capturedImageData = null;
 
             // Utility Functions
             /**
@@ -208,6 +310,174 @@
                 }
             }
 
+            // Camera Functions
+            
+            /**
+             * Starts the camera and shows the video stream
+             */
+            async function startCamera() {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            facingMode: 'environment', // Use back camera on mobile
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        } 
+                    });
+                    
+                    cameraVideo.srcObject = stream;
+                    cameraVideo.play();
+                    
+                    // Show video and hide placeholder
+                    cameraVideo.classList.remove('hidden');
+                    cameraPlaceholder.classList.add('hidden');
+                    startCameraButton.classList.add('hidden');
+                    capturePhotoButton.classList.remove('hidden');
+                    
+                } catch (error) {
+                    console.error('Error accessing camera:', error);
+                    showError('Unable to access camera. Please check permissions.');
+                }
+            }
+
+            /**
+             * Stops the camera stream
+             */
+            function stopCamera() {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+                cameraVideo.srcObject = null;
+                cameraVideo.classList.add('hidden');
+                cameraPlaceholder.classList.remove('hidden');
+                startCameraButton.classList.remove('hidden');
+                capturePhotoButton.classList.add('hidden');
+            }
+
+            /**
+             * Captures a photo from the video stream
+             */
+            function capturePhoto() {
+                const context = cameraCanvas.getContext('2d');
+                cameraCanvas.width = cameraVideo.videoWidth;
+                cameraCanvas.height = cameraVideo.videoHeight;
+                
+                context.drawImage(cameraVideo, 0, 0);
+                
+                // Convert canvas to blob
+                cameraCanvas.toBlob(async (blob) => {
+                    capturedImageData = blob;
+                    
+                    // Show captured image
+                    const imageUrl = URL.createObjectURL(blob);
+                    capturedImage.src = imageUrl;
+                    
+                    // Stop camera and close modal
+                    stopCamera();
+                    cameraModal.classList.add('hidden');
+                    
+                    // Analyze the image with AI
+                    await analyzeFoodImage(blob);
+                    
+                }, 'image/jpeg', 0.8);
+            }
+
+            /**
+             * Analyzes the captured food image using AI
+             */
+            async function analyzeFoodImage(imageBlob) {
+                try {
+                    setLoading(true);
+                    
+                    // Convert blob to base64
+                    const base64 = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result.split(',')[1]);
+                        reader.readAsDataURL(imageBlob);
+                    });
+                    
+                    // Send to backend for AI analysis
+                    const response = await fetchWithBackoff('/api/analyze-image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ image: base64 })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to analyze image');
+                    }
+                    
+                    const result = await response.json();
+                    
+                    // Show detection modal
+                    detectedFood.textContent = result.foodName || 'Unknown food';
+                    quantityInput.value = result.suggestedQuantity || '';
+                    detectionModal.classList.remove('hidden');
+                    
+                } catch (error) {
+                    console.error('Error analyzing image:', error);
+                    showError('Failed to analyze food image. Please try again.');
+                } finally {
+                    setLoading(false);
+                }
+            }
+
+            /**
+             * Handles confirmation of detected food
+             */
+            async function handleConfirmDetection() {
+                const foodName = detectedFood.textContent;
+                const quantity = quantityInput.value.trim();
+                
+                if (!quantity) {
+                    showError('Please enter a quantity');
+                    return;
+                }
+                
+                const query = `${quantity} ${foodName}`;
+                
+                try {
+                    setLoading(true);
+                    errorMessage.classList.add('hidden');
+                    
+                    // Get macro data from AI
+                    const macroData = await getMacrosFromAI(query);
+                    
+                    // Add new item to state
+                    const newFoodItem = {
+                        id: Date.now(),
+                        ...macroData
+                    };
+                    foodItems.unshift(newFoodItem);
+                    
+                    // Save and re-render
+                    saveToStorage();
+                    renderUI();
+                    
+                    // Clear form and close modal
+                    quantityInput.value = '';
+                    detectionModal.classList.add('hidden');
+                    foodInput.value = '';
+                    
+                } catch (error) {
+                    console.error('Error adding detected food:', error);
+                    showError(error.message);
+                } finally {
+                    setLoading(false);
+                }
+            }
+
+            /**
+             * Shows error message
+             */
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.remove('hidden');
+                setTimeout(() => {
+                    errorMessage.classList.add('hidden');
+                }, 5000);
+            }
 
             // Core Functions
             
@@ -408,6 +678,26 @@
                 resetButton.addEventListener('click', showConfirmModal);
                 cancelResetButton.addEventListener('click', hideConfirmModal);
                 confirmResetButton.addEventListener('click', handleResetConfirm);
+                
+                // Camera flow
+                cameraButton.addEventListener('click', () => {
+                    cameraModal.classList.remove('hidden');
+                });
+                
+                closeCameraButton.addEventListener('click', () => {
+                    stopCamera();
+                    cameraModal.classList.add('hidden');
+                });
+                
+                startCameraButton.addEventListener('click', startCamera);
+                capturePhotoButton.addEventListener('click', capturePhoto);
+                
+                // Detection modal flow
+                confirmDetectionButton.addEventListener('click', handleConfirmDetection);
+                cancelDetectionButton.addEventListener('click', () => {
+                    detectionModal.classList.add('hidden');
+                    quantityInput.value = '';
+                });
                 
                 // Load initial data and render
                 loadFromStorage();

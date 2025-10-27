@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MacroNerd</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        #confirm-modal {
+            transition: opacity 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans antialiased">
+
+    <!-- Main Application Container -->
+    <div id="app" class="max-w-lg mx-auto p-4 md:p-6 min-h-screen">
+
+        <!-- Header -->
+        <header class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-emerald-400">MacroNerd</h1>
+            <p class="text-gray-400">Log your food and let AI do the rest.</p>
+        </header>
+
+        <!-- Input Form -->
+        <form id="food-form" class="flex gap-3 mb-6">
+            <input 
+                type="text" 
+                id="food-input" 
+                placeholder="e.g., 2 large eggs and 100g rice" 
+                autocomplete="off"
+                required
+                class="flex-1 bg-gray-800 border-2 border-gray-700 text-gray-100 placeholder-gray-500 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition"
+            >
+            <button 
+                type="submit" 
+                id="add-button"
+                class="bg-emerald-500 text-white font-bold px-5 py-3 rounded-lg shadow-md hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-gray-900 transition disabled:opacity-50"
+            >
+                Add
+            </button>
+        </form>
+
+        <!-- Error Message Display -->
+        <div id="error-message" class="text-red-400 text-center mb-4 hidden"></div>
+
+        <!-- Totals Display -->
+        <div class="bg-gray-800 rounded-xl shadow-lg p-4 mb-6">
+            <h2 class="text-xl font-semibold mb-4 text-center">Today's Totals</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                <div class="flex flex-col">
+                    <span id="total-calories" class="text-2xl font-bold text-emerald-400">0</span>
+                    <span class="text-sm text-gray-400">Calories</span>
+                </div>
+                <div class="flex flex-col">
+                    <span id="total-protein" class="text-2xl font-bold text-sky-400">0g</span>
+                    <span class="text-sm text-gray-400">Protein</span>
+                </div>
+                <div class="flex flex-col">
+                    <span id="total-carbs" class="text-2xl font-bold text-amber-400">0g</span>
+                    <span class="text-sm text-gray-400">Carbs</span>
+                </div>
+                <div class="flex flex-col">
+                    <span id="total-fat" class="text-2xl font-bold text-rose-400">0g</span>
+                    <span class="text-sm text-gray-400">Fat</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Food List -->
+        <div>
+            <h2 class="text-xl font-semibold mb-4">Logged Items</h2>
+            <ul id="food-list" class="space-y-3">
+                <!-- Items will be injected here by JS -->
+                <li id="empty-state" class="text-center text-gray-500 py-4">No items logged yet.</li>
+            </ul>
+        </div>
+
+        <!-- Reset Button -->
+        <footer class="mt-8 text-center">
+            <button 
+                id="reset-button" 
+                class="bg-gray-700 text-gray-400 font-medium px-6 py-3 rounded-lg hover:bg-red-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition"
+            >
+                Reset All Data
+            </button>
+        </footer>
+
+    </div>
+
+    <!-- Confirmation Modal (hidden by default) -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 opacity-0 pointer-events-none z-50">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <h3 class="text-xl font-bold mb-4">Are you sure?</h3>
+            <p class="text-gray-300 mb-6">This will permanently delete all logged food items. This action cannot be undone.</p>
+            <div class="flex justify-end gap-3">
+                <button 
+                    id="cancel-reset-button"
+                    class="bg-gray-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
+                >
+                    Cancel
+                </button>
+                <button 
+                    id="confirm-reset-button"
+                    class="bg-red-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
+                >
+                    Confirm Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const app = document.getElementById('app');
+            const foodForm = document.getElementById('food-form');
+            const foodInput = document.getElementById('food-input');
+            const addButton = document.getElementById('add-button');
+            const foodListEl = document.getElementById('food-list');
+            const emptyState = document.getElementById('empty-state');
+            const errorMessage = document.getElementById('error-message');
+            
+            // Total display elements
+            const totalCaloriesEl = document.getElementById('total-calories');
+            const totalProteinEl = document.getElementById('total-protein');
+            const totalCarbsEl = document.getElementById('total-carbs');
+            const totalFatEl = document.getElementById('total-fat');
+
+            // Reset Modal Elements
+            const resetButton = document.getElementById('reset-button');
+            const confirmModal = document.getElementById('confirm-modal');
+            const cancelResetButton = document.getElementById('cancel-reset-button');
+            const confirmResetButton = document.getElementById('confirm-reset-button');
+
+            // App State
+            const STORAGE_KEY = 'aiMacroTrackerItems';
+            let foodItems = [];
+
+            // Utility Functions
+            /**
+             * Fetches data with exponential backoff.
+             * @param {string} url The URL to fetch.
+             * @param {object} options The fetch options.
+             * @param {number} maxRetries Maximum number of retries.
+             * @returns {Promise<Response>} The fetch response.
+             */
+            async function fetchWithBackoff(url, options, maxRetries = 5) {
+                let delay = 1000; // 1 second
+                for (let i = 0; i < maxRetries; i++) {
+                    try {
+                        const response = await fetch(url, options);
+                        if (!response.ok) {
+                            // Only retry on server errors (5xx) or rate limiting (429)
+                            if (response.status >= 500 || response.status === 429) {
+                                throw new Error(`Server error: ${response.status}`);
+                            }
+                            // Don't retry on client errors (4xx)
+                            return response; 
+                        }
+                        return response;
+                    } catch (error) {
+                        if (i === maxRetries - 1) throw error; // Last retry failed
+                        // Do not log retry attempts as errors
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2; // Exponential backoff
+                    }
+                }
+            }
+
+            // API Functions
+            /**
+             * Fetches macro data from the backend API.
+             */
+            async function getMacrosFromAI(query) {
+                console.log(`[AI] Processing query: "${query}"`);
+
+                try {
+                    const response = await fetchWithBackoff('/api/get-macros', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `API request failed with status ${response.status}`);
+                    }
+
+                    const macros = await response.json();
+                    
+                    // Ensure all fields are numbers, default to 0 if not
+                    macros.calories = Number(macros.calories) || 0;
+                    macros.protein = Number(macros.protein) || 0;
+                    macros.carbs = Number(macros.carbs) || 0;
+                    macros.fat = Number(macros.fat) || 0;
+
+                    console.log("[AI] Returning data:", macros);
+                    return macros;
+
+                } catch (error) {
+                    console.error("Error in getMacrosFromAI:", error);
+                    throw new Error("Failed to get macro data from AI."); // This will be caught by handleAddFood
+                }
+            }
+
+
+            // Core Functions
+            
+            /**
+             * Renders the entire list and updates totals based on the current state.
+             */
+            function renderUI() {
+                // Clear current list
+                foodListEl.innerHTML = '';
+                
+                let totalCals = 0;
+                let totalProt = 0;
+                let totalCarbs = 0;
+                let totalFat = 0;
+                
+                if (foodItems.length === 0) {
+                    foodListEl.appendChild(emptyState);
+                } else {
+                    // Render each item
+                    foodItems.forEach(item => {
+                        // Accumulate totals
+                        totalCals += item.calories;
+                        totalProt += item.protein;
+                        totalCarbs += item.carbs;
+                        totalFat += item.fat;
+
+                        // Create list item element
+                        const li = document.createElement('li');
+                        li.className = 'bg-gray-800 rounded-lg shadow p-4 border border-gray-700';
+                        li.innerHTML = `
+                            <div class="flex justify-between items-start">
+                                <h3 class="text-lg font-semibold text-gray-100 mb-2">${item.name}</h3>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-lg font-bold text-emerald-400">${item.calories} kcal</span>
+                                    <button 
+                                        class="remove-item-btn text-red-400 hover:text-red-300 hover:bg-red-900/20 p-2 rounded-lg transition-colors"
+                                        data-id="${item.id}"
+                                        title="Remove item"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex justify-around text-center text-sm">
+                                <div>
+                                    <span class="font-bold text-sky-400">${item.protein}g</span>
+                                    <span class="block text-xs text-gray-400">Protein</span>
+                                </div>
+                                <div>
+                                    <span class="font-bold text-amber-400">${item.carbs}g</span>
+                                    <span class="block text-xs text-gray-400">Carbs</span>
+                                </div>
+                                <div>
+                                    <span class="font-bold text-rose-400">${item.fat}g</span>
+                                    <span class="block text-xs text-gray-400">Fat</span>
+                                </div>
+                            </div>
+                        `;
+                        foodListEl.appendChild(li);
+                        
+                        // Add event listener for the remove button
+                        const removeBtn = li.querySelector('.remove-item-btn');
+                        removeBtn.addEventListener('click', () => {
+                            removeFoodItem(item.id);
+                        });
+                    });
+                }
+                
+                // Update total display
+                totalCaloriesEl.textContent = Math.round(totalCals);
+                totalProteinEl.textContent = `${Math.round(totalProt)}g`;
+                totalCarbsEl.textContent = `${Math.round(totalCarbs)}g`;
+                totalFatEl.textContent = `${Math.round(totalFat)}g`;
+            }
+
+            /**
+             * Saves the current foodItems state to browser's localStorage.
+             */
+            function saveToStorage() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(foodItems));
+            }
+
+            /**
+             * Loads data from localStorage into the state.
+             */
+            function loadFromStorage() {
+                const storedData = localStorage.getItem(STORAGE_KEY);
+                if (storedData) {
+                    foodItems = JSON.parse(storedData);
+                }
+            }
+
+            /**
+             * Sets a loading state on the UI.
+             */
+            function setLoading(isLoading) {
+                if (isLoading) {
+                    app.classList.add('opacity-70');
+                    addButton.disabled = true;
+                    addButton.textContent = '...';
+                    foodInput.disabled = true;
+                } else {
+                    app.classList.remove('opacity-70');
+                    addButton.disabled = false;
+                    addButton.textContent = 'Add';
+                    foodInput.disabled = false;
+                }
+            }
+
+            // Event Handlers
+
+            /**
+             * Handles the food form submission.
+             */
+            async function handleAddFood(e) {
+                e.preventDefault();
+                const query = foodInput.value.trim();
+                
+                if (!query) return;
+
+                setLoading(true);
+                errorMessage.classList.add('hidden'); // Clear previous errors
+                
+                try {
+                    // Get macro data from API
+                    const macroData = await getMacrosFromAI(query);
+                    
+                    // Add new item to state
+                    const newFoodItem = {
+                        id: Date.now(), // Simple unique ID
+                        ...macroData
+                    };
+                    // Add to the beginning of the list
+                    foodItems.unshift(newFoodItem);
+                    
+                    // Save and re-render
+                    saveToStorage();
+                    renderUI();
+                    
+                    // Clear input
+                    foodInput.value = '';
+
+                } catch (error) {
+                    console.error("Failed to fetch macro data:", error);
+                    // Show user-friendly error
+                    errorMessage.textContent = `Error: ${error.message}. Please try again.`;
+                    errorMessage.classList.remove('hidden');
+                } finally {
+                    setLoading(false);
+                }
+            }
+
+            /**
+             * Shows the confirmation modal.
+             */
+            function showConfirmModal() {
+                confirmModal.classList.remove('opacity-0', 'pointer-events-none');
+            }
+
+            /**
+             * Hides the confirmation modal.
+             */
+            function hideConfirmModal() {
+                confirmModal.classList.add('opacity-0', 'pointer-events-none');
+            }
+
+            /**
+             * Handles the final reset confirmation.
+             */
+            function handleResetConfirm() {
+                foodItems = [];
+                saveToStorage(); // This will save an empty array
+                renderUI();
+                hideConfirmModal();
+            }
+
+            /**
+             * Removes a specific food item by ID.
+             */
+            function removeFoodItem(itemId) {
+                foodItems = foodItems.filter(item => item.id !== itemId);
+                saveToStorage();
+                renderUI();
+            }
+
+            // Initialization
+            
+            /**
+             * Initializes the application.
+             */
+            function init() {
+                // Attach event listeners
+                foodForm.addEventListener('submit', handleAddFood);
+                
+                // Reset flow
+                resetButton.addEventListener('click', showConfirmModal);
+                cancelResetButton.addEventListener('click', hideConfirmModal);
+                confirmResetButton.addEventListener('click', handleResetConfirm);
+                
+                // Load initial data and render
+                loadFromStorage();
+                renderUI();
+            }
+            
+            init(); // Run the app
+        });
+    </script>
+</body>
+</html>
+

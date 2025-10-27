@@ -87,7 +87,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('.')); // Serve static files from current directory
 
-// API endpoint to get macros from Gemini
+// DEPRECATED: Heavy processing moved to client-side for better performance
+// This endpoint is kept for fallback only - most requests now go directly to Gemini from client
 app.post('/api/get-macros', async (req, res) => {
     try {
         const { query } = req.body;
@@ -313,6 +314,24 @@ Do not return any text, explanation, or markdown formatting around the JSON obje
     } catch (error) {
         logError(error, 'analyze-image');
         res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Simple API key endpoint (minimal server processing)
+app.get('/api/get-api-key', (req, res) => {
+    try {
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            logError(new Error('GEMINI_API_KEY not found'), 'get-api-key');
+            return res.status(500).json({ error: 'API key not configured' });
+        }
+        
+        // Just return the API key - no heavy processing
+        res.json({ apiKey: apiKey });
+        
+    } catch (error) {
+        logError(error, 'get-api-key');
+        res.status(500).json({ error: 'Failed to get API key' });
     }
 });
 

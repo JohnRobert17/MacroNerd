@@ -93,6 +93,9 @@
                             Capture Photo
                         </button>
                     </div>
+                    <div class="mt-2 text-xs text-gray-500 text-center">
+                        📱 Images are automatically optimized for faster AI processing
+                    </div>
                 </div>
             </div>
         </div>
@@ -313,6 +316,94 @@
                 }
             }
 
+            // Image Processing Functions
+            
+            /**
+             * Resizes an image blob to optimal dimensions for food detection
+             * @param {Blob} imageBlob - The original image blob
+             * @param {number} maxWidth - Maximum width (default: 1920)
+             * @param {number} maxHeight - Maximum height (default: 1080)
+             * @param {number} quality - JPEG quality (default: 0.8)
+             * @returns {Promise<Blob>} - Resized image blob
+             */
+            async function resizeImageForDetection(imageBlob, maxWidth = 1920, maxHeight = 1080, quality = 0.8) {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    img.onload = () => {
+                        // Calculate new dimensions while maintaining aspect ratio
+                        let { width, height } = img;
+                        
+                        if (width > maxWidth || height > maxHeight) {
+                            const aspectRatio = width / height;
+                            
+                            if (width > height) {
+                                width = Math.min(width, maxWidth);
+                                height = width / aspectRatio;
+                            } else {
+                                height = Math.min(height, maxHeight);
+                                width = height * aspectRatio;
+                            }
+                        }
+                        
+                        // Set canvas dimensions
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        // Draw resized image
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Convert to blob with specified quality
+                        canvas.toBlob((resizedBlob) => {
+                            const originalSize = imageBlob.size;
+                            const resizedSize = resizedBlob.size;
+                            const compressionRatio = ((originalSize - resizedSize) / originalSize * 100).toFixed(1);
+                            
+                            console.log(`📸 Image resized: ${(originalSize / 1024).toFixed(1)}KB → ${(resizedSize / 1024).toFixed(1)}KB (${compressionRatio}% reduction)`);
+                            console.log(`📐 Dimensions: ${img.naturalWidth}x${img.naturalHeight} → ${width}x${height}`);
+                            
+                            resolve(resizedBlob);
+                        }, 'image/jpeg', quality);
+                    };
+                    
+                    img.src = URL.createObjectURL(imageBlob);
+                });
+            }
+            
+            /**
+             * Detects device capabilities and returns optimal image settings
+             * @returns {Object} - Optimal settings for the device
+             */
+            function getOptimalImageSettings() {
+                const isHighEndDevice = navigator.hardwareConcurrency > 4;
+                const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                
+                if (isMobile) {
+                    // Mobile devices: smaller max dimensions, higher compression
+                    return {
+                        maxWidth: 1280,
+                        maxHeight: 720,
+                        quality: 0.75
+                    };
+                } else if (isHighEndDevice) {
+                    // High-end devices: can handle larger images but compress more
+                    return {
+                        maxWidth: 1920,
+                        maxHeight: 1080,
+                        quality: 0.7
+                    };
+                } else {
+                    // Standard devices: balanced settings
+                    return {
+                        maxWidth: 1600,
+                        maxHeight: 900,
+                        quality: 0.8
+                    };
+                }
+            }
+
             // Camera Functions
             
             /**
@@ -358,31 +449,48 @@
             }
 
             /**
-             * Captures a photo from the video stream
+             * Captures a photo from the video stream and optimizes it for AI processing
              */
-            function capturePhoto() {
+            async function capturePhoto() {
                 const context = cameraCanvas.getContext('2d');
                 cameraCanvas.width = cameraVideo.videoWidth;
                 cameraCanvas.height = cameraVideo.videoHeight;
                 
                 context.drawImage(cameraVideo, 0, 0);
                 
-                // Convert canvas to blob
-                cameraCanvas.toBlob(async (blob) => {
-                    capturedImageData = blob;
+                // Convert canvas to blob first
+                cameraCanvas.toBlob(async (originalBlob) => {
+                    try {
+                        // Get optimal settings for this device
+                        const settings = getOptimalImageSettings();
+                        console.log(`📱 Device settings: ${JSON.stringify(settings)}`);
+                        
+                        // Resize image for optimal AI processing
+                        const optimizedBlob = await resizeImageForDetection(
+                            originalBlob, 
+                            settings.maxWidth, 
+                            settings.maxHeight, 
+                            settings.quality
+                        );
+                        
+                        capturedImageData = optimizedBlob;
+                        
+                        // Show captured image (use original for display)
+                        const imageUrl = URL.createObjectURL(originalBlob);
+                        capturedImage.src = imageUrl;
+                        
+                        // Stop camera and close modal
+                        stopCamera();
+                        cameraModal.classList.add('hidden');
+                        
+                        // Analyze the optimized image with AI
+                        await analyzeFoodImage(optimizedBlob);
+                        
+                    } catch (error) {
+                        showError('Failed to process captured image', error, 'image-processing');
+                    }
                     
-                    // Show captured image
-                    const imageUrl = URL.createObjectURL(blob);
-                    capturedImage.src = imageUrl;
-                    
-                    // Stop camera and close modal
-                    stopCamera();
-                    cameraModal.classList.add('hidden');
-                    
-                    // Analyze the image with AI
-                    await analyzeFoodImage(blob);
-                    
-                }, 'image/jpeg', 0.8);
+                }, 'image/jpeg', 0.9); // High quality for initial capture
             }
 
             /**

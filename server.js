@@ -207,7 +207,13 @@ app.post('/api/analyze-image', async (req, res) => {
     try {
         const { image } = req.body;
         
-        logInfo('Received image analysis request', { imageSize: image?.length || 0 });
+        // Calculate image size in KB for better readability
+        const imageSizeKB = image ? Math.round(image.length / 1024) : 0;
+        logInfo('Received image analysis request', { 
+            imageSizeKB: imageSizeKB,
+            imageSizeBytes: image?.length || 0,
+            estimatedOriginalSize: imageSizeKB > 0 ? `~${Math.round(imageSizeKB * 1.5)}KB (estimated original)` : 'unknown'
+        });
         
         if (!image) {
             logError(new Error('Image is required'), 'analyze-image');
@@ -344,6 +350,42 @@ app.get('/api/test-env', (req, res) => {
             error: 'Failed to check environment',
             timestamp: new Date().toISOString()
         });
+    }
+});
+
+// Performance monitoring endpoint
+app.get('/api/performance-stats', (req, res) => {
+    try {
+        const stats = {
+            timestamp: new Date().toISOString(),
+            server: {
+                uptime: process.uptime(),
+                memory: process.memoryUsage(),
+                cpuUsage: process.cpuUsage(),
+                platform: process.platform,
+                nodeVersion: process.version
+            },
+            environment: {
+                NODE_ENV: process.env.NODE_ENV || 'development',
+                optimization: {
+                    imageResizing: 'enabled',
+                    compression: 'client-side',
+                    maxImageSize: '1920x1080 (mobile: 1280x720)'
+                }
+            },
+            recommendations: {
+                mobile: 'Images resized to 1280x720 for optimal performance',
+                desktop: 'Images resized to 1920x1080 with 70% compression',
+                standard: 'Images resized to 1600x900 with 80% compression'
+            }
+        };
+        
+        logInfo('Performance stats requested', { uptime: stats.server.uptime });
+        res.json(stats);
+        
+    } catch (error) {
+        logError(error, 'performance-stats');
+        res.status(500).json({ error: 'Failed to get performance stats' });
     }
 });
 

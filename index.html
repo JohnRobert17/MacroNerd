@@ -2,16 +2,46 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>MacroNerd</title>
     <link rel="icon" type="image/png" href="images/dish_3437497.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            /* Fix mobile viewport issues */
+            height: 100vh;
+            height: 100dvh; /* Dynamic viewport height for mobile */
+            overflow-x: hidden;
         }
         #confirm-modal {
             transition: opacity 0.2s ease-in-out;
+        }
+        
+        /* Fix for mobile browsers with dynamic UI */
+        @supports (height: 100dvh) {
+            body {
+                height: 100dvh;
+            }
+        }
+        
+        /* Ensure app container uses full height */
+        #app {
+            min-height: 100vh;
+            min-height: 100dvh;
+            min-height: calc(var(--vh, 1vh) * 100);
+        }
+        
+        /* Fix for iOS Safari */
+        @media screen and (max-width: 768px) {
+            body {
+                height: -webkit-fill-available;
+                height: calc(var(--vh, 1vh) * 100);
+            }
+            #app {
+                min-height: -webkit-fill-available;
+                min-height: calc(var(--vh, 1vh) * 100);
+            }
         }
     </style>
 </head>
@@ -1023,12 +1053,50 @@ All values should be numbers (integers). Do not return any text, explanation, or
                 }
             }
 
+            // Mobile Viewport Fix Functions
+            
+            /**
+             * Fixes mobile viewport height issues
+             */
+            function fixMobileViewport() {
+                // Set CSS custom property for viewport height
+                const setViewportHeight = () => {
+                    const vh = window.innerHeight * 0.01;
+                    document.documentElement.style.setProperty('--vh', `${vh}px`);
+                };
+                
+                // Set initial height
+                setViewportHeight();
+                
+                // Update on resize (when mobile browser UI changes)
+                window.addEventListener('resize', setViewportHeight);
+                window.addEventListener('orientationchange', () => {
+                    setTimeout(setViewportHeight, 100);
+                });
+                
+                // Handle visual viewport changes (mobile browsers)
+                if (window.visualViewport) {
+                    window.visualViewport.addEventListener('resize', setViewportHeight);
+                }
+                
+                // Additional fix for Android Chrome
+                if (/Android/i.test(navigator.userAgent)) {
+                    // Force a reflow to ensure proper height calculation
+                    setTimeout(() => {
+                        document.body.style.height = '100vh';
+                        document.body.style.height = `${window.innerHeight}px`;
+                    }, 100);
+                }
+            }
+            
             // Initialization
             
             /**
              * Initializes the application.
              */
             async function init() {
+                // Fix mobile viewport issues first
+                fixMobileViewport();
                 // Attach event listeners
                 foodForm.addEventListener('submit', handleAddFood);
                 

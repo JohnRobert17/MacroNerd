@@ -1230,6 +1230,11 @@ All values should be numbers (integers). Do not return any text, explanation, or
                 // Attach event listeners
                 foodForm.addEventListener('submit', handleAddFood);
                 
+                // Reset flow
+                resetButton.addEventListener('click', showConfirmModal);
+                cancelResetButton.addEventListener('click', hideConfirmModal);
+                confirmResetButton.addEventListener('click', handleResetConfirm);
+
                 carbsTotalContainer.addEventListener('click', () => {
                     carbsModal.classList.remove('opacity-0', 'pointer-events-none');
                 });

@@ -147,7 +147,7 @@
                     <span id="total-protein" class="text-2xl font-bold text-sky-400">0g</span>
                     <span class="text-sm text-gray-400">Protein</span>
                 </div>
-                <div class="flex flex-col">
+                <div id="carbs-total-container" class="flex flex-col cursor-pointer">
                     <span id="total-carbs" class="text-2xl font-bold text-amber-400">0g</span>
                     <span class="text-sm text-gray-400">Carbs</span>
                 </div>
@@ -201,8 +201,37 @@
         </div>
     </div>
 
+    <!-- Carbs Breakdown Modal (hidden by default) -->
+    <div id="carbs-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 opacity-0 pointer-events-none z-50">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <h3 class="text-xl font-bold mb-4">Carbohydrate Breakdown</h3>
+            <div class="grid grid-cols-3 gap-4 text-center mb-6">
+                <div class="flex flex-col">
+                    <span id="modal-total-sugar" class="text-2xl font-bold text-amber-300">0g</span>
+                    <span class="text-sm text-gray-400">Sugar</span>
+                </div>
+                <div class="flex flex-col">
+                    <span id="modal-total-starch" class="text-2xl font-bold text-amber-500">0g</span>
+                    <span class="text-sm text-gray-400">Starch</span>
+                </div>
+                <div class="flex flex-col">
+                    <span id="modal-total-fiber" class="text-2xl font-bold text-lime-400">0g</span>
+                    <span class="text-sm text-gray-400">Fiber</span>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button 
+                    id="close-carbs-modal-button"
+                    class="bg-gray-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
 
-    <script>
+
+<script>
         document.addEventListener('DOMContentLoaded', () => {
             // DOM Elements
             const app = document.getElementById('app');
@@ -218,6 +247,14 @@
             const totalProteinEl = document.getElementById('total-protein');
             const totalCarbsEl = document.getElementById('total-carbs');
             const totalFatEl = document.getElementById('total-fat');
+
+            // Carbs Modal Elements
+            const carbsTotalContainer = document.getElementById('carbs-total-container');
+            const carbsModal = document.getElementById('carbs-modal');
+            const closeCarbsModalButton = document.getElementById('close-carbs-modal-button');
+            const modalTotalSugarEl = document.getElementById('modal-total-sugar');
+            const modalTotalStarchEl = document.getElementById('modal-total-starch');
+            const modalTotalFiberEl = document.getElementById('modal-total-fiber');
 
             // Reset Modal Elements
             const resetButton = document.getElementById('reset-button');
@@ -326,7 +363,9 @@
                         calories: Math.max(0, Number(data.calories) || 0),
                         protein: Math.max(0, Number(data.protein) || 0),
                         carbs: Math.max(0, Number(data.carbs) || 0),
-                        fat: Math.max(0, Number(data.fat) || 0)
+                        fat: Math.max(0, Number(data.fat) || 0),
+                        sugar: Math.max(0, Number(data.sugar) || 0),
+                        starch: Math.max(0, Number(data.starch) || 0)
                     };
                 } else if (type === 'image') {
                     return {
@@ -392,7 +431,9 @@
   "calories": 0,
   "protein": 0,
   "carbs": 0,
-  "fat": 0
+  "fat": 0,
+  "sugar": 0,
+  "starch": 0
 }
 All values should be numbers (integers). Do not return any text, explanation, or markdown \`\`\`json\`\`\` formatting around the JSON object.`;
 
@@ -412,9 +453,11 @@ All values should be numbers (integers). Do not return any text, explanation, or
                                 "calories": { "type": "NUMBER" },
                                 "protein": { "type": "NUMBER" },
                                 "carbs": { "type": "NUMBER" },
-                                "fat": { "type": "NUMBER" }
+                                "fat": { "type": "NUMBER" },
+                                "sugar": { "type": "NUMBER" },
+                                "starch": { "type": "NUMBER" }
                             },
-                            required: ["name", "calories", "protein", "carbs", "fat"]
+                            required: ["name", "calories", "protein", "carbs", "fat", "sugar", "starch"]
                         }
                     }
                 };
@@ -827,6 +870,8 @@ All values should be numbers (integers). Do not return any text, explanation, or
                 let totalProt = 0;
                 let totalCarbs = 0;
                 let totalFat = 0;
+                let totalSugar = 0;
+                let totalStarch = 0;
                 
                 if (foodItems.length === 0) {
                     foodListEl.appendChild(emptyState);
@@ -838,6 +883,8 @@ All values should be numbers (integers). Do not return any text, explanation, or
                         totalProt += item.protein;
                         totalCarbs += item.carbs;
                         totalFat += item.fat;
+                        totalSugar += item.sugar;
+                        totalStarch += item.starch;
 
                         // Create list item element
                         const li = document.createElement('li');
@@ -863,7 +910,7 @@ All values should be numbers (integers). Do not return any text, explanation, or
                                     <span class="font-bold text-sky-400">${item.protein}g</span>
                                     <span class="block text-xs text-gray-400">Protein</span>
                                 </div>
-                                <div>
+                                <div class="item-carbs cursor-pointer">
                                     <span class="font-bold text-amber-400">${item.carbs}g</span>
                                     <span class="block text-xs text-gray-400">Carbs</span>
                                 </div>
@@ -880,6 +927,15 @@ All values should be numbers (integers). Do not return any text, explanation, or
                         removeBtn.addEventListener('click', () => {
                             removeFoodItem(item.id);
                         });
+
+                        const carbsEl = li.querySelector('.item-carbs');
+                        carbsEl.addEventListener('click', () => {
+                            const fiber = item.carbs - item.sugar - item.starch;
+                            modalTotalSugarEl.textContent = `${Math.round(item.sugar)}g`;
+                            modalTotalStarchEl.textContent = `${Math.round(item.starch)}g`;
+                            modalTotalFiberEl.textContent = `${Math.round(fiber)}g`;
+                            carbsModal.classList.remove('opacity-0', 'pointer-events-none');
+                        });
                     });
                 }
                 
@@ -888,6 +944,10 @@ All values should be numbers (integers). Do not return any text, explanation, or
                 totalProteinEl.textContent = `${Math.round(totalProt)}g`;
                 totalCarbsEl.textContent = `${Math.round(totalCarbs)}g`;
                 totalFatEl.textContent = `${Math.round(totalFat)}g`;
+                const totalFiber = totalCarbs - totalSugar - totalStarch;
+                modalTotalSugarEl.textContent = `${Math.round(totalSugar)}g`;
+                modalTotalStarchEl.textContent = `${Math.round(totalStarch)}g`;
+                modalTotalFiberEl.textContent = `${Math.round(totalFiber)}g`;
             }
 
             /**
@@ -1032,10 +1092,13 @@ All values should be numbers (integers). Do not return any text, explanation, or
                 // Attach event listeners
                 foodForm.addEventListener('submit', handleAddFood);
                 
-                // Reset flow
-                resetButton.addEventListener('click', showConfirmModal);
-                cancelResetButton.addEventListener('click', hideConfirmModal);
-                confirmResetButton.addEventListener('click', handleResetConfirm);
+                carbsTotalContainer.addEventListener('click', () => {
+                    carbsModal.classList.remove('opacity-0', 'pointer-events-none');
+                });
+
+                closeCarbsModalButton.addEventListener('click', () => {
+                    carbsModal.classList.add('opacity-0', 'pointer-events-none');
+                });
                 
                 // Camera flow
                 cameraButton.addEventListener('click', () => {

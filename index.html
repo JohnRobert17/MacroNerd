@@ -9,7 +9,7 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        #confirm-modal {
+        #settings-modal, #delete-modal, #remove-item-modal, #carbs-modal, #camera-modal, #detection-modal {
             transition: opacity 0.2s ease-in-out;
         }
     </style>
@@ -26,19 +26,28 @@
         </header>
 
         <!-- Input Form -->
-        <form id="food-form" class="flex gap-3 mb-6">
-            <input 
-                type="text" 
-                id="food-input" 
-                placeholder="e.g., 2 large eggs and 100g rice" 
-                autocomplete="off"
-                required
-                class="flex-1 bg-gray-800 border-2 border-gray-700 text-gray-100 placeholder-gray-500 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition"
-            >
+        <form id="food-form" class="mb-6">
+            <div class="flex gap-3 mb-3">
+                <input 
+                    type="text" 
+                    id="food-input" 
+                    placeholder="e.g., 2 large eggs and 100g rice" 
+                    autocomplete="off"
+                    required
+                    class="flex-1 bg-gray-800 border-2 border-gray-700 text-gray-100 placeholder-gray-500 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition"
+                >
+                <button 
+                    type="button" 
+                    id="camera-button"
+                    class="bg-sky-500 text-white font-bold px-5 py-3 rounded-lg shadow-md hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-gray-900 transition disabled:opacity-50"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </button>
+            </div>
             <button 
                 type="submit" 
                 id="add-button"
-                class="bg-emerald-500 text-white font-bold px-5 py-3 rounded-lg shadow-md hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-gray-900 transition disabled:opacity-50"
+                class="w-full bg-emerald-500 text-white font-bold px-5 py-3 rounded-lg shadow-md hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-gray-900 transition disabled:opacity-50"
             >
                 Add
             </button>
@@ -59,7 +68,7 @@
                     <span id="total-protein" class="text-2xl font-bold text-sky-400">0g</span>
                     <span class="text-sm text-gray-400">Protein</span>
                 </div>
-                <div class="flex flex-col">
+                <div class="flex flex-col" id="carbs-total-container">
                     <span id="total-carbs" class="text-2xl font-bold text-amber-400">0g</span>
                     <span class="text-sm text-gray-400">Carbs</span>
                 </div>
@@ -79,37 +88,134 @@
             </ul>
         </div>
 
-        <!-- Reset Button -->
+        <!-- Settings Button -->
         <footer class="mt-8 text-center">
             <button 
-                id="reset-button" 
-                class="bg-gray-700 text-gray-400 font-medium px-6 py-3 rounded-lg hover:bg-red-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition"
+                id="settings-button" 
+                class="bg-gray-700 text-gray-400 font-medium px-6 py-3 rounded-lg hover:bg-gray-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition"
             >
-                Reset All Data
+                Settings
             </button>
         </footer>
 
     </div>
 
-    <!-- Confirmation Modal (hidden by default) -->
-    <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 opacity-0 pointer-events-none z-50">
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 opacity-0 pointer-events-none z-50">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <h3 class="text-xl font-bold mb-4">Settings</h3>
+            <div class="bg-gray-900/50 border border-yellow-500/30 rounded-lg p-3 mb-6">
+                <p class="text-sm text-yellow-300">
+                    <span class="font-bold">Note:</span> Data is not saved to a database, but in your browser's local storage. Clearing your browser's data will also remove all saved items.
+                </p>
+            </div>
+            <button 
+                id="reset-data-button" 
+                class="w-full bg-red-600 text-white font-bold px-5 py-3 rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
+            >
+                Reset All Data
+            </button>
+            <div class="flex justify-end gap-3 mt-6">
+                <button 
+                    id="close-settings-button"
+                    class="bg-gray-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 opacity-0 pointer-events-none z-50">
         <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm">
             <h3 class="text-xl font-bold mb-4">Are you sure?</h3>
             <p class="text-gray-300 mb-6">This will permanently delete all logged food items. This action cannot be undone.</p>
             <div class="flex justify-end gap-3">
                 <button 
-                    id="cancel-reset-button"
+                    id="cancel-delete-button"
                     class="bg-gray-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
                 >
                     Cancel
                 </button>
                 <button 
-                    id="confirm-reset-button"
+                    id="confirm-delete-button"
                     class="bg-red-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
                 >
-                    Confirm Reset
+                    Confirm Delete
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Remove Item Confirmation Modal -->
+    <div id="remove-item-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 opacity-0 pointer-events-none z-50">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <h3 class="text-xl font-bold mb-4">Remove Item?</h3>
+            <p class="text-gray-300 mb-6">Are you sure you want to permanently remove this item?</p>
+            <div class="flex justify-end gap-3">
+                <button
+                    id="cancel-remove-button"
+                    class="bg-gray-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
+                >
+                    Cancel
+                </button>
+                <button
+                    id="confirm-remove-button"
+                    class="bg-red-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
+                >
+                    Remove
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carbs Modal -->
+    <div id="carbs-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 opacity-0 pointer-events-none z-50">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <h3 class="text-xl font-bold mb-4">Net Carbs</h3>
+            <p class="text-gray-300 mb-6">
+                Net carbs are calculated by subtracting fiber from total carbohydrates. This value can be a more accurate representation of the carbs that affect blood sugar levels.
+            </p>
+            <div class="flex justify-end gap-3">
+                <button
+                    id="close-carbs-modal-button"
+                    class="bg-gray-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Camera Modal -->
+    <div id="camera-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4">Scan Your Food</h3>
+            <div id="camera-placeholder" class="bg-gray-900 rounded-lg flex items-center justify-center h-64 mb-4">
+                <p class="text-gray-500">Camera will appear here</p>
+            </div>
+            <video id="camera-video" class="hidden w-full h-64 mb-4 rounded-lg" autoplay playsinline></video>
+            <canvas id="camera-canvas" class="hidden"></canvas>
+            <div class="flex justify-between gap-3">
+                <button id="start-camera" class="bg-emerald-500 text-white font-bold px-5 py-3 rounded-lg">Start Camera</button>
+                <button id="capture-photo" class="bg-sky-500 text-white font-bold px-5 py-3 rounded-lg hidden">Capture</button>
+                <button id="close-camera" class="bg-gray-600 text-white font-medium px-4 py-2 rounded-lg">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detection Modal -->
+    <div id="detection-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <h3 class="text-xl font-bold mb-4">Food Detected</h3>
+            <img id="captured-image" src="" alt="Captured food" class="rounded-lg mb-4">
+            <p class="text-gray-300 mb-2">AI thinks this is: <strong id="detected-food" class="text-emerald-400"></strong></p>
+            <div class="flex gap-3 mb-4">
+                <input type="text" id="quantity-input" placeholder="e.g., 100g" class="flex-1 bg-gray-700 border-2 border-gray-600 rounded-lg px-4 py-2">
+                <button id="confirm-detection" class="bg-emerald-500 text-white font-bold px-5 py-2 rounded-lg">Confirm</button>
+            </div>
+            <button id="cancel-detection" class="w-full bg-gray-600 text-white font-medium px-4 py-2 rounded-lg">Cancel</button>
         </div>
     </div>
 
@@ -130,7 +236,45 @@
             const totalProteinEl = document.getElementById('total-protein');
             const totalCarbsEl = document.getElementById('total-carbs');
             const totalFatEl = document.getElementById('total-fat');
+            const carbsTotalContainer = document.getElementById('carbs-total-container');
 
+            // Settings Modal Elements
+            const settingsButton = document.getElementById('settings-button');
+            const settingsModal = document.getElementById('settings-modal');
+            const closeSettingsButton = document.getElementById('close-settings-button');
+            const resetDataButton = document.getElementById('reset-data-button');
+
+            // Delete Modal Elements
+            const deleteModal = document.getElementById('delete-modal');
+            const cancelDeleteButton = document.getElementById('cancel-delete-button');
+            const confirmDeleteButton = document.getElementById('confirm-delete-button');
+
+            // Remove Item Modal Elements
+            const removeItemModal = document.getElementById('remove-item-modal');
+            const cancelRemoveButton = document.getElementById('cancel-remove-button');
+            const confirmRemoveButton = document.getElementById('confirm-remove-button');
+
+            // Carbs Modal Elements
+            const carbsModal = document.getElementById('carbs-modal');
+            const closeCarbsModalButton = document.getElementById('close-carbs-modal-button');
+
+            // Camera Elements
+            const cameraButton = document.getElementById('camera-button');
+            const cameraModal = document.getElementById('camera-modal');
+            const closeCameraButton = document.getElementById('close-camera');
+            const startCameraButton = document.getElementById('start-camera');
+            const capturePhotoButton = document.getElementById('capture-photo');
+            const cameraVideo = document.getElementById('camera-video');
+            const cameraCanvas = document.getElementById('camera-canvas');
+            const cameraPlaceholder = document.getElementById('camera-placeholder');
+            
+            // Detection Modal Elements
+            const detectionModal = document.getElementById('detection-modal');
+            const capturedImage = document.getElementById('captured-image');
+            const detectedFood = document.getElementById('detected-food');
+            const quantityInput = document.getElementById('quantity-input');
+            const confirmDetectionButton = document.getElementById('confirm-detection');
+            const cancelDetectionButton = document.getElementById('cancel-detection');
             // Reset Modal Elements
             const resetButton = document.getElementById('reset-button');
             const confirmModal = document.getElementById('confirm-modal');
@@ -140,6 +284,9 @@
             // App State
             const STORAGE_KEY = 'aiMacroTrackerItems';
             let foodItems = [];
+            let stream = null;
+            let capturedImageData = null;
+            let itemIdToRemove = null;
 
             // Utility Functions
             /**
@@ -203,9 +350,258 @@
                     return macros;
 
                 } catch (error) {
-                    console.error("Error in getMacrosFromAI:", error);
-                    throw new Error("Failed to get macro data from AI."); // This will be caught by handleAddFood
+                    showError('Failed to get macros from AI. Please try again.', error, 'api-request');
                 }
+            }
+
+            /**
+             * Stops the camera stream
+             */
+            function stopCamera() {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+                cameraVideo.srcObject = null;
+                cameraVideo.classList.add('hidden');
+                cameraPlaceholder.classList.remove('hidden');
+                startCameraButton.classList.remove('hidden');
+                capturePhotoButton.classList.add('hidden');
+            }
+
+            /**
+             * Starts the camera stream
+             */
+            async function startCamera() {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            facingMode: 'environment' 
+                        } 
+                    });
+                    cameraVideo.srcObject = stream;
+                    cameraVideo.classList.remove('hidden');
+                    cameraPlaceholder.classList.add('hidden');
+                    startCameraButton.classList.add('hidden');
+                    capturePhotoButton.classList.remove('hidden');
+                } catch (error) {
+                    showError('Unable to access camera. Please check permissions.', error, 'camera-access');
+                }
+            }
+
+            /**
+             * Captures a photo from the video stream and optimizes it for AI processing
+             */
+            async function capturePhoto() {
+                const context = cameraCanvas.getContext('2d');
+                cameraCanvas.width = cameraVideo.videoWidth;
+                cameraCanvas.height = cameraVideo.videoHeight;
+                
+                context.drawImage(cameraVideo, 0, 0);
+                
+                // Convert canvas to blob first
+                cameraCanvas.toBlob(async (originalBlob) => {
+                    try {
+                        // Get optimal settings for this device
+                        const settings = getOptimalImageSettings();
+                        console.log(`📱 Device settings: ${JSON.stringify(settings)}`);
+                        
+                        // Resize image for optimal AI processing
+                        const optimizedBlob = await resizeImageForDetection(
+                            originalBlob, 
+                            settings.maxWidth, 
+                            settings.maxHeight, 
+                            settings.quality
+                        );
+                        
+                        capturedImageData = optimizedBlob;
+                        
+                        // Show captured image (use original for display)
+                        const imageUrl = URL.createObjectURL(originalBlob);
+                        capturedImage.src = imageUrl;
+                        
+                        // Stop camera and close modal
+                        stopCamera();
+                        cameraModal.classList.add('hidden');
+                        
+                        // Analyze the optimized image with AI
+                        await analyzeFoodImage(optimizedBlob);
+                        
+                    } catch (error) {
+                        showError('Failed to process captured image', error, 'image-processing');
+                    }
+                    
+                }, 'image/jpeg', 0.9); // High quality for initial capture
+            }
+
+            /**
+             * Determines optimal image settings based on device capabilities.
+             */
+            function getOptimalImageSettings() {
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                if (isMobile) {
+                    return { maxWidth: 800, maxHeight: 800, quality: 0.7 }; // Lower quality for faster mobile uploads
+                } else {
+                    return { maxWidth: 1200, maxHeight: 1200, quality: 0.8 }; // Higher quality for desktop
+                }
+            }
+
+            /**
+             * Resizes an image blob to the specified dimensions.
+             */
+            function resizeImageForDetection(blob, maxWidth, maxHeight, quality) {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.src = URL.createObjectURL(blob);
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        if (width > height) {
+                            if (width > maxWidth) {
+                                height = Math.round((height * maxWidth) / width);
+                                width = maxWidth;
+                            }
+                        } else {
+                            if (height > maxHeight) {
+                                width = Math.round((width * maxHeight) / height);
+                                height = maxHeight;
+                            }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        canvas.toBlob(resolve, 'image/jpeg', quality);
+                    };
+                    img.onerror = reject;
+                });
+            }
+
+            /**
+             * Analyzes the captured food image using AI
+             */
+            async function analyzeFoodImage(imageBlob) {
+                try {
+                    setLoading(true);
+                    
+                    // Convert blob to base64
+                    const base64 = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result.split(',')[1]);
+                        reader.readAsDataURL(imageBlob);
+                    });
+                    
+                    // Send to backend for AI analysis
+                    const response = await fetchWithBackoff('/api/analyze-image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ image: base64 })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to analyze image');
+                    }
+                    
+                    const result = await response.json();
+                    
+                    // Show detection modal
+                    detectedFood.textContent = result.foodName || 'Unknown food';
+                    quantityInput.value = result.suggestedQuantity || '';
+                    detectionModal.classList.remove('hidden');
+                    
+                } catch (error) {
+                    showError('Failed to analyze food image. Please try again.', error, 'image-analysis');
+                } finally {
+                    setLoading(false);
+                }
+            }
+
+            /**
+             * Handles confirmation of detected food
+             */
+            async function handleConfirmDetection() {
+                const foodName = detectedFood.textContent;
+                const quantity = quantityInput.value.trim();
+                
+                if (!quantity) {
+                    showError('Please enter a quantity', null, 'detection-validation');
+                    return;
+                }
+                
+                const query = `${quantity} ${foodName}`;
+                
+                try {
+                    setLoading(true);
+                    errorMessage.classList.add('hidden');
+                    
+                    // Get macro data from AI
+                    const macroData = await getMacrosFromAI(query);
+                    
+                    // Add new item to state
+                    const newFoodItem = {
+                        id: Date.now(),
+                        query,
+                        ...macroData
+                    };
+                    foodItems.unshift(newFoodItem);
+                    
+                    // Save and re-render
+                    saveToStorage();
+                    renderUI();
+                    
+                    // Clear form and close modal
+                    quantityInput.value = '';
+                    detectionModal.classList.add('hidden');
+                    foodInput.value = '';
+                    
+                } catch (error) {
+                    showError(error.message, error, 'detection-confirmation');
+                } finally {
+                    setLoading(false);
+                }
+            }
+
+            /**
+             * Enhanced error logging and display function
+             */
+            async function showError(message, error = null, context = '') {
+                const timestamp = new Date().toISOString();
+                
+                // Enhanced console logging
+                console.error(`
+🚨 FRONTEND ERROR [${timestamp}] ${context ? `[${context}] ` : ''}`);
+                console.error('Error Message:', message);
+                
+                if (error) {
+                    console.error('Error Object:', {
+                        name: error.name,
+                        message: error.message,
+                        stack: error.stack
+                    });
+                    
+                    if (error.response) {
+                        console.error('Response Details:', {
+                            status: error.response.status,
+                            statusText: error.response.statusText,
+                            data: await error.response.text()
+                        });
+                    }
+                }
+                
+                console.error('=====================================');
+                
+                // Display error to user
+                errorMessage.textContent = message;
+                errorMessage.classList.remove('hidden');
+                setTimeout(() => {
+                    errorMessage.classList.add('hidden');
+                }, 5000);
             }
 
 
@@ -239,7 +635,7 @@
                         li.className = 'bg-gray-800 rounded-lg shadow p-4 border border-gray-700';
                         li.innerHTML = `
                             <div class="flex justify-between items-start">
-                                <h3 class="text-lg font-semibold text-gray-100 mb-2">${item.name}</h3>
+                                <h3 class="text-lg font-semibold text-gray-100 mb-2">${item.name || item.query}</h3>
                                 <div class="flex items-center gap-3">
                                     <span class="text-lg font-bold text-emerald-400">${item.calories} kcal</span>
                                     <button 
@@ -334,12 +730,13 @@
                 errorMessage.classList.add('hidden'); // Clear previous errors
                 
                 try {
-                    // Get macro data from API
+                    // Get macro data from AI
                     const macroData = await getMacrosFromAI(query);
                     
                     // Add new item to state
                     const newFoodItem = {
                         id: Date.now(), // Simple unique ID
+                        query,
                         ...macroData
                     };
                     // Add to the beginning of the list
@@ -363,37 +760,174 @@
             }
 
             /**
-             * Shows the confirmation modal.
+             * Shows the settings modal.
              */
-            function showConfirmModal() {
-                confirmModal.classList.remove('opacity-0', 'pointer-events-none');
+            function showSettingsModal() {
+                settingsModal.classList.remove('opacity-0', 'pointer-events-none');
             }
 
             /**
-             * Hides the confirmation modal.
+             * Hides the settings modal.
              */
-            function hideConfirmModal() {
-                confirmModal.classList.add('opacity-0', 'pointer-events-none');
+            function hideSettingsModal() {
+                settingsModal.classList.add('opacity-0', 'pointer-events-none');
             }
 
             /**
-             * Handles the final reset confirmation.
+             * Shows the delete confirmation modal.
              */
-            function handleResetConfirm() {
+            function showDeleteModal() {
+                deleteModal.classList.remove('opacity-0', 'pointer-events-none');
+            }
+
+            /**
+             * Hides the delete confirmation modal.
+             */
+            function hideDeleteModal() {
+                deleteModal.classList.add('opacity-0', 'pointer-events-none');
+            }
+
+            /**
+             * Handles the final delete confirmation.
+             */
+            function handleDeleteConfirm() {
                 foodItems = [];
                 saveToStorage(); // This will save an empty array
                 renderUI();
-                hideConfirmModal();
+                hideDeleteModal();
+                hideSettingsModal();
+            }
+
+            /**
+             * Shows the remove item confirmation modal.
+             */
+            function showRemoveItemModal() {
+                removeItemModal.classList.remove('opacity-0', 'pointer-events-none');
+            }
+
+            /**
+             * Hides the remove item confirmation modal.
+             */
+            function hideRemoveItemModal() {
+                removeItemModal.classList.add('opacity-0', 'pointer-events-none');
+            }
+
+            /**
+             * Handles the final remove item confirmation.
+             */
+            function handleRemoveItemConfirm() {
+                if (itemIdToRemove) {
+                    foodItems = foodItems.filter(item => item.id !== itemIdToRemove);
+                    saveToStorage();
+                    renderUI();
+                }
+                hideRemoveItemModal();
             }
 
             /**
              * Removes a specific food item by ID.
              */
             function removeFoodItem(itemId) {
-                foodItems = foodItems.filter(item => item.id !== itemId);
-                saveToStorage();
-                renderUI();
+                itemIdToRemove = itemId;
+                showRemoveItemModal();
             }
+
+            // Test Environment Functions
+            
+            /**
+             * Tests the environment setup by calling the test endpoint
+             */
+            async function testEnvironment() {
+                try {
+                    console.log('🧪 Testing environment setup...');
+                    const response = await fetch('/api/test-env');
+                    const envData = await response.json();
+                    
+                    console.log('✅ Environment Test Results:', envData);
+                    
+                    if (envData.status === 'MISSING_API_KEY') {
+                        showError('⚠️ GEMINI_API_KEY is not configured. Some features may not work.', null, 'env-test');
+                    } else {
+                        console.log('✅ Environment is properly configured');
+                    }
+                    
+                    return envData;
+                } catch (error) {
+                    showError('Failed to test environment setup', error, 'env-test');
+                    return null;
+                }
+            }
+
+            // Mobile Viewport Fix Functions
+            
+            /**
+             * Aggressive mobile viewport fix
+             */
+            function fixMobileViewport() {
+                // Set CSS custom property for viewport height
+                const setViewportHeight = () => {
+                    const vh = window.innerHeight * 0.01;
+                    document.documentElement.style.setProperty('--vh', `${vh}px`);
+                    
+                    // Force body height on mobile
+                    if (window.innerWidth <= 768) {
+                        document.body.style.height = `${window.innerHeight}px`;
+                        document.body.style.minHeight = `${window.innerHeight}px`;
+                        document.getElementById('app').style.height = `${window.innerHeight}px`;
+                        document.getElementById('app').style.minHeight = `${window.innerHeight}px`;
+                    }
+                };
+                
+                // Set initial height
+                setViewportHeight();
+                
+                // Update on resize (when mobile browser UI changes)
+                window.addEventListener('resize', setViewportHeight);
+                window.addEventListener('orientationchange', () => {
+                    setTimeout(setViewportHeight, 100);
+                });
+                
+                // Handle visual viewport changes (mobile browsers)
+                if (window.visualViewport) {
+                    window.visualViewport.addEventListener('resize', setViewportHeight);
+                }
+                
+                // Aggressive Android Chrome fix
+                if (/Android/i.test(navigator.userAgent)) {
+                    // Multiple attempts to fix the height
+                    setTimeout(setViewportHeight, 50);
+                    setTimeout(setViewportHeight, 200);
+                    setTimeout(setViewportHeight, 500);
+                    
+                    // Force a reflow
+                    document.body.offsetHeight;
+                    
+                    // Set explicit pixel height
+                    const forceHeight = () => {
+                        const height = window.innerHeight;
+                        document.body.style.height = `${height}px`;
+                        document.body.style.minHeight = `${height}px`;
+                        document.getElementById('app').style.height = `${height}px`;
+                        document.getElementById('app').style.minHeight = `${height}px`;
+                    };
+                    
+                    forceHeight();
+                    setTimeout(forceHeight, 100);
+                    setTimeout(forceHeight, 300);
+                }
+                
+                // Additional fix for Chrome mobile
+                if (/Chrome/i.test(navigator.userAgent) && /Mobile/i.test(navigator.userAgent)) {
+                    // Force viewport meta tag update
+                    const viewport = document.querySelector('meta[name=viewport]');
+                    if (viewport) {
+                        viewport.setAttribute('content',
+                            'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
+                        );
+                    }
+                }
+            }
+            
 
             // Initialization
             
@@ -404,10 +938,44 @@
                 // Attach event listeners
                 foodForm.addEventListener('submit', handleAddFood);
                 
-                // Reset flow
-                resetButton.addEventListener('click', showConfirmModal);
-                cancelResetButton.addEventListener('click', hideConfirmModal);
-                confirmResetButton.addEventListener('click', handleResetConfirm);
+                // Settings and Delete flow
+                settingsButton.addEventListener('click', showSettingsModal);
+                closeSettingsButton.addEventListener('click', hideSettingsModal);
+                resetDataButton.addEventListener('click', showDeleteModal);
+                cancelDeleteButton.addEventListener('click', hideDeleteModal);
+                confirmDeleteButton.addEventListener('click', handleDeleteConfirm);
+
+                // Remove item flow
+                cancelRemoveButton.addEventListener('click', hideRemoveItemModal);
+                confirmRemoveButton.addEventListener('click', handleRemoveItemConfirm);
+
+                carbsTotalContainer.addEventListener('click', () => {
+                    carbsModal.classList.remove('opacity-0', 'pointer-events-none');
+                });
+
+                closeCarbsModalButton.addEventListener('click', () => {
+                    carbsModal.classList.add('opacity-0', 'pointer-events-none');
+                });
+                
+                // Camera flow
+                cameraButton.addEventListener('click', () => {
+                    cameraModal.classList.remove('hidden');
+                });
+                
+                closeCameraButton.addEventListener('click', () => {
+                    stopCamera();
+                    cameraModal.classList.add('hidden');
+                });
+                
+                startCameraButton.addEventListener('click', startCamera);
+                capturePhotoButton.addEventListener('click', capturePhoto);
+                
+                // Detection modal flow
+                confirmDetectionButton.addEventListener('click', handleConfirmDetection);
+                cancelDetectionButton.addEventListener('click', () => {
+                    detectionModal.classList.add('hidden');
+                    quantityInput.value = '';
+                });
                 
                 // Load initial data and render
                 loadFromStorage();
@@ -419,4 +987,3 @@
     </script>
 </body>
 </html>
-

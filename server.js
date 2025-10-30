@@ -115,7 +115,9 @@ app.post('/api/get-macros', async (req, res) => {
   "calories": 0,
   "protein": 0,
   "carbs": 0,
-  "fat": 0
+  "fat": 0,
+  "sugar": 0,
+  "starch": 0
 }
 All values should be numbers (integers). Do not return any text, explanation, or markdown \`\`\`json\`\`\` formatting around the JSON object.`;
 
@@ -126,9 +128,11 @@ All values should be numbers (integers). Do not return any text, explanation, or
                 "calories": { "type": "NUMBER" },
                 "protein": { "type": "NUMBER" },
                 "carbs": { "type": "NUMBER" },
-                "fat": { "type": "NUMBER" }
+                "fat": { "type": "NUMBER" },
+                "sugar": { "type": "NUMBER" },
+                "starch": { "type": "NUMBER" }
             },
-            required: ["name", "calories", "protein", "carbs", "fat"]
+            required: ["name", "calories", "protein", "carbs", "fat", "sugar", "starch"]
         };
 
         const payload = {
@@ -179,6 +183,8 @@ All values should be numbers (integers). Do not return any text, explanation, or
                     macros.protein = Number(macros.protein) || 0;
                     macros.carbs = Number(macros.carbs) || 0;
                     macros.fat = Number(macros.fat) || 0;
+                    macros.sugar = Number(macros.sugar) || 0;
+                    macros.starch = Number(macros.starch) || 0;
 
                     logInfo('Successfully processed macro request', { name: macros.name, calories: macros.calories });
                     return res.json(macros);

@@ -104,11 +104,31 @@
                     <input type="date" id="date-picker" class="bg-gray-700 text-white px-3 py-1 rounded-lg text-center">
                     <button id="next-day" class="bg-gray-700 text-white px-3 py-1 rounded-lg">&gt;</button>
                 </div>
-                <h2 class="text-xl font-semibold mb-4">Daily Log</h2>
-                <ul id="daily-food-list" class="space-y-3">
-                    <li id="daily-empty-state" class="text-center text-gray-500 py-4">No items logged for this date.</li>
-                </ul>
-            </div>
+                            <h2 class="text-xl font-semibold mb-4">Daily Log</h2>
+                            <div class="bg-gray-900 rounded-xl shadow-lg p-4 mb-4">
+                                <h3 class="text-lg font-semibold mb-2 text-center">Totals for Selected Day</h3>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                                    <div class="flex flex-col">
+                                        <span id="daily-total-calories" class="text-2xl font-bold text-emerald-400">0</span>
+                                        <span class="text-sm text-gray-400">Calories</span>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span id="daily-total-protein" class="text-2xl font-bold text-sky-400">0g</span>
+                                        <span class="text-sm text-gray-400">Protein</span>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span id="daily-total-carbs" class="text-2xl font-bold text-amber-400">0g</span>
+                                        <span class="text-sm text-gray-400">Carbs</span>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span id="daily-total-fat" class="text-2xl font-bold text-rose-400">0g</span>
+                                        <span class="text-sm text-gray-400">Fat</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <ul id="daily-food-list" class="space-y-3">
+                                <li id="daily-empty-state" class="text-center text-gray-500 py-4">No items logged for this date.</li>
+                            </ul>            </div>
         </div>
 
         <!-- Settings Button -->
@@ -273,6 +293,12 @@
             const nextDayButton = document.getElementById('next-day');
             const dailyFoodListEl = document.getElementById('daily-food-list');
             const dailyEmptyState = document.getElementById('daily-empty-state');
+
+            // Daily Totals Elements
+            const dailyTotalCaloriesEl = document.getElementById('daily-total-calories');
+            const dailyTotalProteinEl = document.getElementById('daily-total-protein');
+            const dailyTotalCarbsEl = document.getElementById('daily-total-carbs');
+            const dailyTotalFatEl = document.getElementById('daily-total-fat');
 
             // Settings Modal Elements
             const settingsButton = document.getElementById('settings-button');
@@ -670,8 +696,11 @@
                 // Render daily list
                 renderFoodList(dailyFoodListEl, dailyEmptyState, foodItems.filter(item => item.date === formatDate(selectedDate)));
 
-                // Update totals for the selected date
-                updateTotals(foodItems.filter(item => item.date === formatDate(selectedDate)));
+                // Update totals for today's view
+                updateTotals(foodItems.filter(item => item.date === today), totalCaloriesEl, totalProteinEl, totalCarbsEl, totalFatEl);
+
+                // Update totals for the selected date in daily log
+                updateTotals(foodItems.filter(item => item.date === formatDate(selectedDate)), dailyTotalCaloriesEl, dailyTotalProteinEl, dailyTotalCarbsEl, dailyTotalFatEl);
             }
 
             /**
@@ -728,7 +757,7 @@
             /**
              * Updates the total macro display.
              */
-            function updateTotals(items) {
+            function updateTotals(items, caloriesEl, proteinEl, carbsEl, fatEl) {
                 let totalCals = 0;
                 let totalProt = 0;
                 let totalCarbs = 0;
@@ -741,10 +770,10 @@
                     totalFat += item.fat;
                 });
 
-                totalCaloriesEl.textContent = Math.round(totalCals);
-                totalProteinEl.textContent = `${Math.round(totalProt)}g`;
-                totalCarbsEl.textContent = `${Math.round(totalCarbs)}g`;
-                totalFatEl.textContent = `${Math.round(totalFat)}g`;
+                caloriesEl.textContent = Math.round(totalCals);
+                proteinEl.textContent = `${Math.round(totalProt)}g`;
+                carbsEl.textContent = `${Math.round(totalCarbs)}g`;
+                fatEl.textContent = `${Math.round(totalFat)}g`;
             }
 
             /**

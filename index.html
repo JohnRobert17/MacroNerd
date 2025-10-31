@@ -885,11 +885,11 @@
                     detectedFood.textContent = foodName;
                     quantityInput.value = suggestedQuantity;
                     
-                    detectionDescription.innerHTML = `This looks like <b>${foodName}</b> (${suggestedQuantity}). It contains approximately:<br>
+                    detectionDescription.innerHTML = `This looks like <b>${foodName}</b>. It contains approximately:<br>
                         <b>Calories:</b> ${macroData.calories}, 
                         <b>Protein:</b> ${macroData.protein}g, 
                         <b>Carbs:</b> ${macroData.carbs}g, 
-                        <b>Fat:</b> ${macroData.fat}g.`;
+                        <b>Fat:</b> ${macroData.fat}g per ${suggestedQuantity}.`;
 
                     detectionModal.classList.remove('hidden');
                     

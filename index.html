@@ -362,11 +362,11 @@
                 <div class="mb-3 sm:mb-4">
                     <img id="captured-image" class="w-full h-36 sm:h-48 bg-gray-900 rounded-lg object-cover" alt="Captured food">
                 </div>
-                <div class="mb-3 sm:mb-4">
-                    <p class="text-gray-300 mb-2 text-sm sm:text-base">AI detected:</p>
-                    <p id="detected-food" class="text-base sm:text-lg font-semibold text-emerald-400"></p>
-                </div>
-                <div class="mb-3 sm:mb-4">
+                                    <div class="mb-3 sm:mb-4">
+                                        <p class="text-gray-300 mb-2 text-sm sm:text-base">AI detected:</p>
+                                        <p id="detected-food" class="text-base sm:text-lg font-semibold text-emerald-400"></p>
+                                        <p id="detection-description" class="text-sm text-gray-400 mt-2"></p>
+                                    </div>                <div class="mb-3 sm:mb-4">
                     <label for="quantity-input" class="block text-gray-300 mb-2 text-sm sm:text-base">Quantity:</label>
                     <input 
                         type="text" 
@@ -462,6 +462,7 @@
             const detectionModal = document.getElementById('detection-modal');
             const capturedImage = document.getElementById('captured-image');
             const detectedFood = document.getElementById('detected-food');
+            const detectionDescription = document.getElementById('detection-description');
             const quantityInput = document.getElementById('quantity-input');
             const confirmDetectionButton = document.getElementById('confirm-detection');
             const cancelDetectionButton = document.getElementById('cancel-detection');
@@ -473,6 +474,8 @@
             let capturedImageData = null;
             let itemIdToRemove = null;
             let selectedDate = new Date(); // Default to today
+            let detectedMacroData = null;
+            let suggestedQuantityFromDetection = null;
 
             // Utility Functions
             /**
@@ -623,95 +626,7 @@
                 console.log(`💾 Cached data for: ${query}`);
             }
             
-            /**
-             * Direct API call to Gemini (bypassing server)
-             * @param {string} query - Food query
-             * @returns {Promise<Object>} - Macro data
-             */
-            async function callGeminiDirect(query) {
-                const apiKey = await getApiKeyFromServer(); // We'll get this from server once
-                
-                const systemPrompt = `You are a nutrition expert. The user will provide a food query. You must analyze the query, calculate the total nutritional information, and return *ONLY* a single JSON object with the following exact structure:
-{
-  "name": "A corrected or parsed name of the food items",
-  "calories": 0,
-  "protein": 0,
-  "carbs": 0,
-  "fat": 0,
-  "sugar": 0,
-  "starch": 0
-}
-All values should be numbers (integers). Do not return any text, explanation, or markdown 
 
-json
-
- formatting around the JSON object.`;
-
-                const payload = {
-                    contents: [{"parts": [{"text": query}]}],
-                    systemInstruction: {
-                        parts: [{"text": systemPrompt}]
-                    },
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "OBJECT",
-                            properties: {
-                                "name": { "type": "STRING" },
-                                "calories": { "type": "NUMBER" },
-                                "protein": { "type": "NUMBER" },
-                                "carbs": { "type": "NUMBER" },
-                                "fat": { "type": "NUMBER" },
-                                "sugar": { "type": "NUMBER" },
-                                "starch": { "type": "NUMBER" }
-                            },
-                            required: ["name", "calories", "protein", "carbs", "fat", "sugar", "starch"]
-                        }
-                    }
-                };
-
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`API request failed: ${response.status}`);
-                }
-
-                const result = await response.json();
-                
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
-                    
-                    const jsonText = result.candidates[0].content.parts[0].text;
-                    const macros = JSON.parse(jsonText);
-                    
-                    return validateAndSanitizeData(macros, 'macros');
-                } else {
-                    throw new Error("AI returned an invalid response");
-                }
-            }
-            
-            /**
-             * Get API key from server (one-time setup)
-             */
-            let cachedApiKey = null;
-            async function getApiKeyFromServer() {
-                if (cachedApiKey) return cachedApiKey;
-                
-                try {
-                    const response = await fetch('/api/get-api-key');
-                    const data = await response.json();
-                    cachedApiKey = data.apiKey;
-                    return cachedApiKey;
-                } catch (error) {
-                    console.error('Failed to get API key:', error);
-                    throw new Error('API key not available');
-                }
-            }
 
             // API Functions
             /**
@@ -727,22 +642,7 @@ json
                 }
 
                 try {
-                    // Use client-side retry logic instead of server-side
                     const macros = await clientSideRetry(async () => {
-                        return await callGeminiDirect(query);
-                    });
-
-                    // Cache the result
-                    cacheFoodData(query, macros);
-
-                    console.log("[AI] Returning data:", macros);
-                    return macros;
-
-                } catch (error) {
-                    console.error("Direct API call failed, trying server fallback:", error);
-                    
-                    // Fallback to server if direct call fails
-                    try {
                         const response = await fetch('/api/get-macros', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -750,22 +650,23 @@ json
                         });
 
                         if (!response.ok) {
-                            throw new Error(`Server fallback failed: ${response.status}`);
+                            throw new Error(`Server request failed: ${response.status}`);
                         }
+                        
+                        return await response.json();
+                    });
 
-                        const macros = await response.json();
-                        const validatedMacros = validateAndSanitizeData(macros, 'macros');
-                        
-                        // Cache the fallback result too
-                        cacheFoodData(query, validatedMacros);
-                        
-                        console.log("[AI] Fallback successful:", validatedMacros);
-                        return validatedMacros;
-                        
-                    } catch (fallbackError) {
-                        console.error("Both direct and fallback failed:", fallbackError);
-                        throw new Error(`Failed to get macro data: ${error.message}`);
-                    }
+                    const validatedMacros = validateAndSanitizeData(macros, 'macros');
+                    
+                    // Cache the result
+                    cacheFoodData(query, validatedMacros);
+                    
+                    console.log("[AI] Server request successful:", validatedMacros);
+                    return validatedMacros;
+                    
+                } catch (error) {
+                    console.error("Failed to get macro data from server:", error);
+                    throw new Error(`Failed to get macro data: ${error.message}`);
                 }
             }
 
@@ -972,14 +873,31 @@ json
                     }
                     
                     const result = await response.json();
-                    
+                    const foodName = result.foodName || 'Unknown food';
+                    const suggestedQuantity = result.suggestedQuantity || '';
+                    suggestedQuantityFromDetection = suggestedQuantity;
+
+                    const query = `${suggestedQuantity} ${foodName}`;
+                    const macroData = await getMacrosFromAI(query);
+                    detectedMacroData = macroData;
+
                     // Show detection modal
-                    detectedFood.textContent = result.foodName || 'Unknown food';
-                    quantityInput.value = result.suggestedQuantity || '';
+                    detectedFood.textContent = foodName;
+                    quantityInput.value = suggestedQuantity;
+                    
+                    detectionDescription.innerHTML = `This looks like <b>${foodName}</b> (${suggestedQuantity}). It contains approximately:<br>
+                        <b>Calories:</b> ${macroData.calories}, 
+                        <b>Protein:</b> ${macroData.protein}g, 
+                        <b>Carbs:</b> ${macroData.carbs}g, 
+                        <b>Fat:</b> ${macroData.fat}g.`;
+
                     detectionModal.classList.remove('hidden');
                     
                 } catch (error) {
                     showError('Failed to analyze food image. Please try again.', error, 'image-analysis');
+                    // Clear cache on error
+                    detectedMacroData = null;
+                    suggestedQuantityFromDetection = null;
                 } finally {
                     setLoading(false);
                 }
@@ -1003,14 +921,22 @@ json
                     setLoading(true);
                     errorMessage.classList.add('hidden');
                     
-                    // Get macro data from AI
-                    const macroData = await getMacrosFromAI(query);
+                    let macroData;
+
+                    // Check if quantity was changed
+                    if (quantity === suggestedQuantityFromDetection && detectedMacroData) {
+                        console.log("Using cached macro data from detection.");
+                        macroData = detectedMacroData;
+                    } else {
+                        console.log("Quantity changed or no cached data, refetching macro data.");
+                        macroData = await getMacrosFromAI(query);
+                    }
                     
                     // Add new item to state
                     const newFoodItem = {
                         id: Date.now(),
                         query,
-                        date: formatDate(selectedDate), // Tag with current date
+                        date: formatDate(selectedDate),
                         ...macroData
                     };
                     foodItems.unshift(newFoodItem);
@@ -1023,6 +949,8 @@ json
                     quantityInput.value = '';
                     detectionModal.classList.add('hidden');
                     foodInput.value = '';
+                    detectedMacroData = null; // Clear the cached data
+                    suggestedQuantityFromDetection = null;
                     
                 } catch (error) {
                     showError(error.message, error, 'detection-confirmation');

@@ -23,7 +23,7 @@
             color: #f3f4f6; /* text-gray-100 */
         }
         
-        #confirm-modal {
+        #settings-modal, #delete-modal, #remove-item-modal, #carbs-modal, #camera-modal, #detection-modal {
             transition: opacity 0.2s ease-in-out;
         }
         
@@ -90,178 +90,192 @@
         <header class="text-center mb-6">
             <h1 class="text-3xl font-bold text-emerald-400">MacroNerd</h1>
             <p class="text-gray-400">Log your food and let AI do the rest.</p>
+            <div class="flex justify-center gap-4 mt-4">
+                <button id="show-today-view" class="bg-gray-700 text-white font-medium px-4 py-2 rounded-lg">Today</button>
+                <button id="show-history-view" class="bg-gray-700 text-white font-medium px-4 py-2 rounded-lg">History</button>
+            </div>
         </header>
 
-        <!-- Input Form -->
-        <form id="food-form" class="mb-6">
-            <div class="flex gap-3 mb-3">
-                <input 
-                    type="text" 
-                    id="food-input" 
-                    placeholder="e.g., 2 large eggs" 
-                    autocomplete="off"
-                    required
-                    class="flex-1 bg-gray-800 border-2 border-gray-700 text-gray-100 placeholder-gray-500 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition"
-                >
+        <!-- Main View (Today's Content) -->
+        <div id="main-view">
+            <!-- Input Form -->
+            <form id="food-form" class="mb-6">
+                <div class="flex gap-3 mb-3">
+                    <input 
+                        type="text" 
+                        id="food-input" 
+                        placeholder="e.g., 2 large eggs and 100g rice" 
+                        autocomplete="off"
+                        required
+                        class="flex-1 bg-gray-800 border-2 border-gray-700 text-gray-100 placeholder-gray-500 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition"
+                    >
+                    <button 
+                        type="button" 
+                        id="camera-button"
+                        class="bg-sky-500 text-white font-bold px-5 py-3 rounded-lg shadow-md hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-gray-900 transition disabled:opacity-50"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </button>
+                </div>
                 <button 
-                    type="button" 
-                    id="camera-button"
-                    class="bg-blue-500 text-white font-bold px-3 py-3 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-900 transition disabled:opacity-50 min-w-[48px]"
-                    title="Take photo of food"
+                    type="submit" 
+                    id="add-button"
+                    class="w-full bg-emerald-500 text-white font-bold px-5 py-3 rounded-lg shadow-md hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-gray-900 transition disabled:opacity-50"
                 >
-                    <span class="text-lg">📷</span>
+                    Add
                 </button>
-            </div>
-            <button 
-                type="submit" 
-                id="add-button"
-                class="w-full bg-emerald-500 text-white font-bold px-5 py-3 rounded-lg shadow-md hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-gray-900 transition disabled:opacity-50"
-            >
-                Add Food
-            </button>
-        </form>
+            </form>
 
-        <!-- Error Message Display -->
-        <div id="error-message" class="text-red-400 text-center mb-4 hidden"></div>
+            <!-- Error Message Display -->
+            <div id="error-message" class="text-red-400 text-center mb-4 hidden"></div>
 
-        <!-- Camera Modal -->
-        <div id="camera-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center p-2 sm:p-4">
-            <div class="bg-gray-800 rounded-lg max-w-md w-full max-h-[95vh] overflow-hidden">
-                <div class="p-3 sm:p-4 border-b border-gray-700">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-gray-100">Take Food Photo</h3>
-                        <button id="close-camera" class="text-gray-400 hover:text-gray-200 p-1">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
+            <!-- Totals Display -->
+            <div class="bg-gray-800 rounded-xl shadow-lg p-4 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-center">Today's Totals</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                    <div class="flex flex-col">
+                        <span id="total-calories" class="text-2xl font-bold text-emerald-400">0</span>
+                        <span class="text-sm text-gray-400">Calories</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span id="total-protein" class="text-2xl font-bold text-sky-400">0g</span>
+                        <span class="text-sm text-gray-400">Protein</span>
+                    </div>
+                    <div id="carbs-total-container" class="flex flex-col cursor-pointer">
+                        <span id="total-carbs" class="text-2xl font-bold text-amber-400">0g</span>
+                        <span class="text-sm text-gray-400">Carbs</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span id="total-fat" class="text-2xl font-bold text-rose-400">0g</span>
+                        <span class="text-sm text-gray-400">Fat</span>
                     </div>
                 </div>
-                <div class="p-3 sm:p-4">
-                    <div id="camera-container" class="relative">
-                        <video id="camera-video" class="w-full h-48 sm:h-64 bg-gray-900 rounded-lg object-cover hidden"></video>
-                        <canvas id="camera-canvas" class="hidden"></canvas>
-                        <div id="camera-placeholder" class="w-full h-48 sm:h-64 bg-gray-900 rounded-lg flex items-center justify-center text-gray-400">
-                            <div class="text-center">
-                                <svg class="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 sm:mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                </svg>
-                                <p class="text-sm sm:text-base">Camera will appear here</p>
+            </div>
+
+            <!-- Food List -->
+            <div>
+                <h2 class="text-xl font-semibold mb-4">Logged Items</h2>
+                <ul id="today-food-list" class="space-y-3">
+                    <!-- Items will be injected here by JS -->
+                    <li id="today-empty-state" class="text-center text-gray-500 py-4">No items logged yet.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- History View (Daily Log Content) -->
+        <div id="history-view" class="hidden">
+            <!-- Date Picker and Daily List -->
+            <div class="bg-gray-800 rounded-xl shadow-lg p-4 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <button id="prev-day" class="bg-gray-700 text-white px-3 py-1 rounded-lg">&lt;</button>
+                    <input type="date" id="date-picker" class="bg-gray-700 text-white px-3 py-1 rounded-lg text-center">
+                    <button id="next-day" class="bg-gray-700 text-white px-3 py-1 rounded-lg">&gt;</button>
+                </div>
+                            <h2 class="text-xl font-semibold mb-4">Daily Log</h2>
+                            <div class="bg-gray-900 rounded-xl shadow-lg p-4 mb-4">
+                                <h3 class="text-lg font-semibold mb-2 text-center">Totals for Selected Day</h3>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                                    <div class="flex flex-col">
+                                        <span id="daily-total-calories" class="text-2xl font-bold text-emerald-400">0</span>
+                                        <span class="text-sm text-gray-400">Calories</span>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span id="daily-total-protein" class="text-2xl font-bold text-sky-400">0g</span>
+                                        <span class="text-sm text-gray-400">Protein</span>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span id="daily-total-carbs" class="text-2xl font-bold text-amber-400">0g</span>
+                                        <span class="text-sm text-gray-400">Carbs</span>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span id="daily-total-fat" class="text-2xl font-bold text-rose-400">0g</span>
+                                        <span class="text-sm text-gray-400">Fat</span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="mt-3 sm:mt-4 flex gap-2 sm:gap-3">
-                        <button id="start-camera" class="flex-1 bg-blue-500 text-white font-bold py-2 sm:py-3 rounded-lg hover:bg-blue-600 transition text-sm sm:text-base">
-                            Start Camera
-                        </button>
-                        <button id="capture-photo" class="flex-1 bg-emerald-500 text-white font-bold py-2 sm:py-3 rounded-lg hover:bg-emerald-600 transition hidden text-sm sm:text-base">
-                            Capture Photo
-                        </button>
-                    </div>
-                    <div class="mt-2 text-xs text-gray-500 text-center">
-                        📱 Images are automatically optimized for faster AI processing
-                    </div>
-                </div>
+                            <ul id="daily-food-list" class="space-y-3">
+                                <li id="daily-empty-state" class="text-center text-gray-500 py-4">No items logged for this date.</li>
+                            </ul>
             </div>
         </div>
 
-        <!-- Food Detection Confirmation Modal -->
-        <div id="detection-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center p-2 sm:p-4">
-            <div class="bg-gray-800 rounded-lg max-w-md w-full max-h-[95vh] overflow-hidden">
-                <div class="p-3 sm:p-4 border-b border-gray-700">
-                    <h3 class="text-lg font-semibold text-gray-100">Confirm Food Detection</h3>
-                </div>
-                <div class="p-3 sm:p-4">
-                    <div class="mb-3 sm:mb-4">
-                        <img id="captured-image" class="w-full h-36 sm:h-48 bg-gray-900 rounded-lg object-cover" alt="Captured food">
-                    </div>
-                    <div class="mb-3 sm:mb-4">
-                        <p class="text-gray-300 mb-2 text-sm sm:text-base">AI detected:</p>
-                        <p id="detected-food" class="text-base sm:text-lg font-semibold text-emerald-400"></p>
-                    </div>
-                    <div class="mb-3 sm:mb-4">
-                        <label for="quantity-input" class="block text-gray-300 mb-2 text-sm sm:text-base">Quantity:</label>
-                        <input 
-                            type="text" 
-                            id="quantity-input" 
-                            placeholder="e.g., 1 large, 200g, 2 pieces"
-                            class="w-full bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm sm:text-base"
-                        >
-                    </div>
-                    <div class="flex gap-2 sm:gap-3">
-                        <button id="confirm-detection" class="flex-1 bg-emerald-500 text-white font-bold py-2 sm:py-3 rounded-lg hover:bg-emerald-600 transition text-sm sm:text-base">
-                            Confirm & Add
-                        </button>
-                        <button id="cancel-detection" class="flex-1 bg-gray-600 text-white font-bold py-2 sm:py-3 rounded-lg hover:bg-gray-700 transition text-sm sm:text-base">
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Totals Display -->
-        <div class="bg-gray-800 rounded-xl shadow-lg p-4 mb-6">
-            <h2 class="text-xl font-semibold mb-4 text-center">Today's Totals</h2>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-                <div class="flex flex-col">
-                    <span id="total-calories" class="text-2xl font-bold text-emerald-400">0</span>
-                    <span class="text-sm text-gray-400">Calories</span>
-                </div>
-                <div class="flex flex-col">
-                    <span id="total-protein" class="text-2xl font-bold text-sky-400">0g</span>
-                    <span class="text-sm text-gray-400">Protein</span>
-                </div>
-                <div id="carbs-total-container" class="flex flex-col cursor-pointer">
-                    <span id="total-carbs" class="text-2xl font-bold text-amber-400">0g</span>
-                    <span class="text-sm text-gray-400">Carbs</span>
-                </div>
-                <div class="flex flex-col">
-                    <span id="total-fat" class="text-2xl font-bold text-rose-400">0g</span>
-                    <span class="text-sm text-gray-400">Fat</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Food List -->
-        <div>
-            <h2 class="text-xl font-semibold mb-4">Logged Items</h2>
-            <ul id="food-list" class="space-y-3">
-                <!-- Items will be injected here by JS -->
-                <li id="empty-state" class="text-center text-gray-500 py-4">No items logged yet.</li>
-            </ul>
-        </div>
-
-        <!-- Reset Button -->
+        <!-- Settings Button -->
         <footer class="mt-8 text-center">
             <button 
-                id="reset-button" 
-                class="bg-gray-700 text-gray-400 font-medium px-6 py-3 rounded-lg hover:bg-red-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition"
+                id="settings-button" 
+                class="bg-gray-700 text-gray-400 font-medium px-6 py-3 rounded-lg hover:bg-gray-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition"
             >
-                Reset All Data
+                Settings
             </button>
         </footer>
 
     </div>
 
-    <!-- Confirmation Modal (hidden by default) -->
-    <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 opacity-0 pointer-events-none z-50">
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 opacity-0 pointer-events-none z-50">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <h3 class="text-xl font-bold mb-4">Settings</h3>
+            <div class="bg-gray-900/50 border border-yellow-500/30 rounded-lg p-3 mb-6">
+                <p class="text-sm text-yellow-300">
+                    <span class="font-bold">Note:</span> Data is not saved to a database, but in your browser's local storage. Clearing your browser's data will also remove all saved items.
+                </p>
+            </div>
+            <button 
+                id="reset-data-button" 
+                class="w-full bg-red-600 text-white font-bold px-5 py-3 rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
+            >
+                Reset All Data
+            </button>
+            <div class="flex justify-end gap-3 mt-6">
+                <button 
+                    id="close-settings-button"
+                    class="bg-gray-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 opacity-0 pointer-events-none z-50">
         <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm">
             <h3 class="text-xl font-bold mb-4">Are you sure?</h3>
             <p class="text-gray-300 mb-6">This will permanently delete all logged food items. This action cannot be undone.</p>
             <div class="flex justify-end gap-3">
                 <button 
-                    id="cancel-reset-button"
+                    id="cancel-delete-button"
                     class="bg-gray-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
                 >
                     Cancel
                 </button>
                 <button 
-                    id="confirm-reset-button"
+                    id="confirm-delete-button"
                     class="bg-red-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
                 >
-                    Confirm Reset
+                    Confirm Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Remove Item Confirmation Modal -->
+    <div id="remove-item-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 opacity-0 pointer-events-none z-50">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <h3 class="text-xl font-bold mb-4">Remove Item?</h3>
+            <p class="text-gray-300 mb-6">Are you sure you want to permanently remove this item?</p>
+            <div class="flex justify-end gap-3">
+                <button
+                    id="cancel-remove-button"
+                    class="bg-gray-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
+                >
+                    Cancel
+                </button>
+                <button
+                    id="confirm-remove-button"
+                    class="bg-red-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
+                >
+                    Remove
                 </button>
             </div>
         </div>
@@ -296,6 +310,83 @@
         </div>
     </div>
 
+    <!-- Camera Modal -->
+    <div id="camera-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-gray-800 rounded-lg max-w-md w-full max-h-[95vh] overflow-hidden">
+            <div class="p-3 sm:p-4 border-b border-gray-700">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-100">Take Food Photo</h3>
+                    <button id="close-camera" class="text-gray-400 hover:text-gray-200 p-1">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="p-3 sm:p-4">
+                <div id="camera-container" class="relative">
+                    <video id="camera-video" class="w-full h-48 sm:h-64 bg-gray-900 rounded-lg object-cover hidden"></video>
+                    <canvas id="camera-canvas" class="hidden"></canvas>
+                    <div id="camera-placeholder" class="w-full h-48 sm:h-64 bg-gray-900 rounded-lg flex items-center justify-center text-gray-400">
+                        <div class="text-center">
+                            <svg class="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 sm:mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <p class="text-sm sm:text-base">Camera will appear here</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 sm:mt-4 flex gap-2 sm:gap-3">
+                    <button id="start-camera" class="flex-1 bg-blue-500 text-white font-bold py-2 sm:py-3 rounded-lg hover:bg-blue-600 transition text-sm sm:text-base">
+                        Start Camera
+                    </button>
+                    <button id="capture-photo" class="flex-1 bg-emerald-500 text-white font-bold py-2 sm:py-3 rounded-lg hover:bg-emerald-600 transition hidden text-sm sm:text-base">
+                        Capture Photo
+                    </button>
+                </div>
+                <div class="mt-2 text-xs text-gray-500 text-center">
+                    📱 Images are automatically optimized for faster AI processing
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Food Detection Confirmation Modal -->
+    <div id="detection-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-gray-800 rounded-lg max-w-md w-full max-h-[95vh] overflow-hidden">
+            <div class="p-3 sm:p-4 border-b border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-100">Confirm Food Detection</h3>
+            </div>
+            <div class="p-3 sm:p-4">
+                <div class="mb-3 sm:mb-4">
+                    <img id="captured-image" class="w-full h-36 sm:h-48 bg-gray-900 rounded-lg object-cover" alt="Captured food">
+                </div>
+                <div class="mb-3 sm:mb-4">
+                    <p class="text-gray-300 mb-2 text-sm sm:text-base">AI detected:</p>
+                    <p id="detected-food" class="text-base sm:text-lg font-semibold text-emerald-400"></p>
+                </div>
+                <div class="mb-3 sm:mb-4">
+                    <label for="quantity-input" class="block text-gray-300 mb-2 text-sm sm:text-base">Quantity:</label>
+                    <input 
+                        type="text" 
+                        id="quantity-input" 
+                        placeholder="e.g., 1 large, 200g, 2 pieces"
+                        class="w-full bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm sm:text-base"
+                    >
+                </div>
+                <div class="flex gap-2 sm:gap-3">
+                    <button id="confirm-detection" class="flex-1 bg-emerald-500 text-white font-bold py-2 sm:py-3 rounded-lg hover:bg-emerald-600 transition text-sm sm:text-base">
+                        Confirm & Add
+                    </button>
+                    <button id="cancel-detection" class="flex-1 bg-gray-600 text-white font-bold py-2 sm:py-3 rounded-lg hover:bg-gray-700 transition text-sm sm:text-base">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
 <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -304,8 +395,8 @@
             const foodForm = document.getElementById('food-form');
             const foodInput = document.getElementById('food-input');
             const addButton = document.getElementById('add-button');
-            const foodListEl = document.getElementById('food-list');
-            const emptyState = document.getElementById('empty-state');
+            const foodListEl = document.getElementById('today-food-list');
+            const emptyState = document.getElementById('today-empty-state');
             const errorMessage = document.getElementById('error-message');
             
             // Total display elements
@@ -313,20 +404,49 @@
             const totalProteinEl = document.getElementById('total-protein');
             const totalCarbsEl = document.getElementById('total-carbs');
             const totalFatEl = document.getElementById('total-fat');
+            const carbsTotalContainer = document.getElementById('carbs-total-container');
+
+            // View Elements
+            const mainView = document.getElementById('main-view');
+            const historyView = document.getElementById('history-view');
+            const showTodayViewButton = document.getElementById('show-today-view');
+            const showHistoryViewButton = document.getElementById('show-history-view');
+
+            // Date Picker Elements
+            const datePicker = document.getElementById('date-picker');
+            const prevDayButton = document.getElementById('prev-day');
+            const nextDayButton = document.getElementById('next-day');
+            const dailyFoodListEl = document.getElementById('daily-food-list');
+            const dailyEmptyState = document.getElementById('daily-empty-state');
+
+            // Daily Totals Elements
+            const dailyTotalCaloriesEl = document.getElementById('daily-total-calories');
+            const dailyTotalProteinEl = document.getElementById('daily-total-protein');
+            const dailyTotalCarbsEl = document.getElementById('daily-total-carbs');
+            const dailyTotalFatEl = document.getElementById('daily-total-fat');
+
+            // Settings Modal Elements
+            const settingsButton = document.getElementById('settings-button');
+            const settingsModal = document.getElementById('settings-modal');
+            const closeSettingsButton = document.getElementById('close-settings-button');
+            const resetDataButton = document.getElementById('reset-data-button');
+
+            // Delete Modal Elements
+            const deleteModal = document.getElementById('delete-modal');
+            const cancelDeleteButton = document.getElementById('cancel-delete-button');
+            const confirmDeleteButton = document.getElementById('confirm-delete-button');
+
+            // Remove Item Modal Elements
+            const removeItemModal = document.getElementById('remove-item-modal');
+            const cancelRemoveButton = document.getElementById('cancel-remove-button');
+            const confirmRemoveButton = document.getElementById('confirm-remove-button');
 
             // Carbs Modal Elements
-            const carbsTotalContainer = document.getElementById('carbs-total-container');
             const carbsModal = document.getElementById('carbs-modal');
             const closeCarbsModalButton = document.getElementById('close-carbs-modal-button');
             const modalTotalSugarEl = document.getElementById('modal-total-sugar');
             const modalTotalStarchEl = document.getElementById('modal-total-starch');
             const modalTotalFiberEl = document.getElementById('modal-total-fiber');
-
-            // Reset Modal Elements
-            const resetButton = document.getElementById('reset-button');
-            const confirmModal = document.getElementById('confirm-modal');
-            const cancelResetButton = document.getElementById('cancel-reset-button');
-            const confirmResetButton = document.getElementById('confirm-reset-button');
 
             // Camera Elements
             const cameraButton = document.getElementById('camera-button');
@@ -351,8 +471,28 @@
             let foodItems = [];
             let stream = null;
             let capturedImageData = null;
+            let itemIdToRemove = null;
+            let selectedDate = new Date(); // Default to today
 
             // Utility Functions
+            /**
+             * Formats a date object to YYYY-MM-DD string.
+             */
+            function formatDate(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            /**
+             * Parses a YYYY-MM-DD string to a date object.
+             */
+            function parseDate(dateString) {
+                const [year, month, day] = dateString.split('-').map(Number);
+                return new Date(year, month - 1, day);
+            }
+
             /**
              * Fetches data with exponential backoff.
              * @param {string} url The URL to fetch.
@@ -501,14 +641,16 @@
   "sugar": 0,
   "starch": 0
 }
-All values should be numbers (integers). Do not return any text, explanation, or markdown \`\`\`json\`\`\` formatting around the JSON object.`;
+All values should be numbers (integers). Do not return any text, explanation, or markdown 
+
+json
+
+ formatting around the JSON object.`;
 
                 const payload = {
-                    contents: [{
-                        parts: [{ text: query }]
-                    }],
+                    contents: [{"parts": [{"text": query}]}],
                     systemInstruction: {
-                        parts: [{ text: systemPrompt }]
+                        parts: [{"text": systemPrompt}]
                     },
                     generationConfig: {
                         responseMimeType: "application/json",
@@ -528,7 +670,7 @@ All values should be numbers (integers). Do not return any text, explanation, or
                     }
                 };
 
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -722,7 +864,7 @@ All values should be numbers (integers). Do not return any text, explanation, or
              */
             async function startCamera() {
                 try {
-                    stream = await navigator.mediaDevices.getUserMedia({ 
+                    stream = await navigator.mediaDevices.getUserMedia({
                         video: { 
                             facingMode: 'environment', // Use back camera on mobile
                             width: { ideal: 1280 },
@@ -867,6 +1009,8 @@ All values should be numbers (integers). Do not return any text, explanation, or
                     // Add new item to state
                     const newFoodItem = {
                         id: Date.now(),
+                        query,
+                        date: formatDate(selectedDate), // Tag with current date
                         ...macroData
                     };
                     foodItems.unshift(newFoodItem);
@@ -890,11 +1034,12 @@ All values should be numbers (integers). Do not return any text, explanation, or
             /**
              * Enhanced error logging and display function
              */
-            function showError(message, error = null, context = '') {
+            async function showError(message, error = null, context = '') {
                 const timestamp = new Date().toISOString();
                 
                 // Enhanced console logging
-                console.error(`\n🚨 FRONTEND ERROR [${timestamp}] ${context ? `[${context}] ` : ''}`);
+                console.error(`
+🚨 FRONTEND ERROR [${timestamp}] ${context ? `[${context}] ` : ''}`);
                 console.error('Error Message:', message);
                 
                 if (error) {
@@ -908,12 +1053,12 @@ All values should be numbers (integers). Do not return any text, explanation, or
                         console.error('Response Details:', {
                             status: error.response.status,
                             statusText: error.response.statusText,
-                            data: error.response.data
+                            data: await error.response.text()
                         });
                     }
                 }
                 
-                console.error('=====================================\n');
+                console.error('=====================================');
                 
                 // Display error to user
                 errorMessage.textContent = message;
@@ -926,38 +1071,39 @@ All values should be numbers (integers). Do not return any text, explanation, or
             // Core Functions
             
             /**
-             * Renders the entire list and updates totals based on the current state.
+             * Renders the list of food items for the selected date and updates totals.
              */
             function renderUI() {
-                // Clear current list
-                foodListEl.innerHTML = '';
-                
-                let totalCals = 0;
-                let totalProt = 0;
-                let totalCarbs = 0;
-                let totalFat = 0;
-                let totalSugar = 0;
-                let totalStarch = 0;
-                
-                if (foodItems.length === 0) {
-                    foodListEl.appendChild(emptyState);
-                } else {
-                    // Render each item
-                    foodItems.forEach(item => {
-                        // Accumulate totals
-                        totalCals += item.calories;
-                        totalProt += item.protein;
-                        totalCarbs += item.carbs;
-                        totalFat += item.fat;
-                        totalSugar += item.sugar;
-                        totalStarch += item.starch;
+                const today = formatDate(new Date());
+                const isTodaySelected = formatDate(selectedDate) === today;
 
-                        // Create list item element
+                // Render today's list
+                renderFoodList(foodListEl, emptyState, foodItems.filter(item => item.date === today));
+
+                // Render daily list
+                renderFoodList(dailyFoodListEl, dailyEmptyState, foodItems.filter(item => item.date === formatDate(selectedDate)));
+
+                // Update totals for today's view
+                updateTotals(foodItems.filter(item => item.date === today), totalCaloriesEl, totalProteinEl, totalCarbsEl, totalFatEl);
+
+                // Update totals for the selected date in daily log
+                updateTotals(foodItems.filter(item => item.date === formatDate(selectedDate)), dailyTotalCaloriesEl, dailyTotalProteinEl, dailyTotalCarbsEl, dailyTotalFatEl);
+            }
+
+            /**
+             * Renders a food list in the specified container.
+             */
+            function renderFoodList(containerEl, emptyStateEl, items) {
+                containerEl.innerHTML = '';
+                if (items.length === 0) {
+                    containerEl.appendChild(emptyStateEl);
+                } else {
+                    items.forEach(item => {
                         const li = document.createElement('li');
                         li.className = 'bg-gray-800 rounded-lg shadow p-4 border border-gray-700';
                         li.innerHTML = `
                             <div class="flex justify-between items-start">
-                                <h3 class="text-lg font-semibold text-gray-100 mb-2">${item.name}</h3>
+                                <h3 class="text-lg font-semibold text-gray-100 mb-2">${item.name || item.query}</h3>
                                 <div class="flex items-center gap-3">
                                     <span class="text-lg font-bold text-emerald-400">${item.calories} kcal</span>
                                     <button 
@@ -986,9 +1132,8 @@ All values should be numbers (integers). Do not return any text, explanation, or
                                 </div>
                             </div>
                         `;
-                        foodListEl.appendChild(li);
+                        containerEl.appendChild(li);
                         
-                        // Add event listener for the remove button
                         const removeBtn = li.querySelector('.remove-item-btn');
                         removeBtn.addEventListener('click', () => {
                             removeFoodItem(item.id);
@@ -1004,12 +1149,33 @@ All values should be numbers (integers). Do not return any text, explanation, or
                         });
                     });
                 }
+            }
+
+            /**
+             * Updates the total macro display.
+             */
+            function updateTotals(items, caloriesEl, proteinEl, carbsEl, fatEl) {
+                let totalCals = 0;
+                let totalProt = 0;
+                let totalCarbs = 0;
+                let totalFat = 0;
+                let totalSugar = 0;
+                let totalStarch = 0;
+
+                items.forEach(item => {
+                    totalCals += item.calories;
+                    totalProt += item.protein;
+                    totalCarbs += item.carbs;
+                    totalFat += item.fat;
+                    totalSugar += item.sugar;
+                    totalStarch += item.starch;
+                });
+
+                caloriesEl.textContent = Math.round(totalCals);
+                proteinEl.textContent = `${Math.round(totalProt)}g`;
+                carbsEl.textContent = `${Math.round(totalCarbs)}g`;
+                fatEl.textContent = `${Math.round(totalFat)}g`;
                 
-                // Update total display
-                totalCaloriesEl.textContent = Math.round(totalCals);
-                totalProteinEl.textContent = `${Math.round(totalProt)}g`;
-                totalCarbsEl.textContent = `${Math.round(totalCarbs)}g`;
-                totalFatEl.textContent = `${Math.round(totalFat)}g`;
                 const totalFiber = totalCarbs - totalSugar - totalStarch;
                 modalTotalSugarEl.textContent = `${Math.round(totalSugar)}g`;
                 modalTotalStarchEl.textContent = `${Math.round(totalStarch)}g`;
@@ -1030,6 +1196,12 @@ All values should be numbers (integers). Do not return any text, explanation, or
                 const storedData = localStorage.getItem(STORAGE_KEY);
                 if (storedData) {
                     foodItems = JSON.parse(storedData);
+                    // Ensure all loaded items have a date, default to today if missing
+                    foodItems.forEach(item => {
+                        if (!item.date) {
+                            item.date = formatDate(new Date());
+                        }
+                    });
                 }
             }
 
@@ -1065,12 +1237,14 @@ All values should be numbers (integers). Do not return any text, explanation, or
                 errorMessage.classList.add('hidden'); // Clear previous errors
                 
                 try {
-                    // Get macro data from API
+                    // Get macro data from AI
                     const macroData = await getMacrosFromAI(query);
                     
                     // Add new item to state
                     const newFoodItem = {
                         id: Date.now(), // Simple unique ID
+                        query,
+                        date: formatDate(selectedDate), // Tag with current date
                         ...macroData
                     };
                     // Add to the beginning of the list
@@ -1091,36 +1265,76 @@ All values should be numbers (integers). Do not return any text, explanation, or
             }
 
             /**
-             * Shows the confirmation modal.
+             * Shows the settings modal.
              */
-            function showConfirmModal() {
-                confirmModal.classList.remove('opacity-0', 'pointer-events-none');
+            function showSettingsModal() {
+                settingsModal.classList.remove('opacity-0', 'pointer-events-none');
             }
 
             /**
-             * Hides the confirmation modal.
+             * Hides the settings modal.
              */
-            function hideConfirmModal() {
-                confirmModal.classList.add('opacity-0', 'pointer-events-none');
+            function hideSettingsModal() {
+                settingsModal.classList.add('opacity-0', 'pointer-events-none');
             }
 
             /**
-             * Handles the final reset confirmation.
+             * Shows the delete confirmation modal.
              */
-            function handleResetConfirm() {
+            function showDeleteModal() {
+                deleteModal.classList.remove('opacity-0', 'pointer-events-none');
+            }
+
+            /**
+             * Hides the delete confirmation modal.
+             */
+            function hideDeleteModal() {
+                deleteModal.classList.add('opacity-0', 'pointer-events-none');
+            }
+
+            /**
+             * Handles the final delete confirmation.
+             */
+            function handleDeleteConfirm() {
                 foodItems = [];
                 saveToStorage(); // This will save an empty array
                 renderUI();
-                hideConfirmModal();
+                hideDeleteModal();
+                hideSettingsModal();
+            }
+
+            /**
+             * Shows the remove item confirmation modal.
+             */
+            function showRemoveItemModal() {
+                removeItemModal.classList.remove('opacity-0', 'pointer-events-none');
+            }
+
+            /**
+             * Hides the remove item confirmation modal.
+             */
+            function hideRemoveItemModal() {
+                removeItemModal.classList.add('opacity-0', 'pointer-events-none');
+            }
+
+            /**
+             * Handles the final remove item confirmation.
+             */
+            function handleRemoveItemConfirm() {
+                if (itemIdToRemove) {
+                    foodItems = foodItems.filter(item => item.id !== itemIdToRemove);
+                    saveToStorage();
+                    renderUI();
+                }
+                hideRemoveItemModal();
             }
 
             /**
              * Removes a specific food item by ID.
              */
             function removeFoodItem(itemId) {
-                foodItems = foodItems.filter(item => item.id !== itemId);
-                saveToStorage();
-                renderUI();
+                itemIdToRemove = itemId;
+                showRemoveItemModal();
             }
 
             // Test Environment Functions
@@ -1212,7 +1426,7 @@ All values should be numbers (integers). Do not return any text, explanation, or
                     // Force viewport meta tag update
                     const viewport = document.querySelector('meta[name=viewport]');
                     if (viewport) {
-                        viewport.setAttribute('content', 
+                        viewport.setAttribute('content',
                             'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
                         );
                     }
@@ -1222,6 +1436,27 @@ All values should be numbers (integers). Do not return any text, explanation, or
             // Initialization
             
             /**
+             * Shows the main view (Today's content).
+             */
+            function showTodayView() {
+                mainView.classList.remove('hidden');
+                historyView.classList.add('hidden');
+                // Ensure selectedDate is today when switching to today view
+                selectedDate = new Date();
+                datePicker.value = formatDate(selectedDate);
+                renderUI();
+            }
+
+            /**
+             * Shows the history view (Daily Log content).
+             */
+            function showHistoryView() {
+                mainView.classList.add('hidden');
+                historyView.classList.remove('hidden');
+                renderUI();
+            }
+
+            /**
              * Initializes the application.
              */
             async function init() {
@@ -1230,10 +1465,16 @@ All values should be numbers (integers). Do not return any text, explanation, or
                 // Attach event listeners
                 foodForm.addEventListener('submit', handleAddFood);
                 
-                // Reset flow
-                resetButton.addEventListener('click', showConfirmModal);
-                cancelResetButton.addEventListener('click', hideConfirmModal);
-                confirmResetButton.addEventListener('click', handleResetConfirm);
+                // Settings and Delete flow
+                settingsButton.addEventListener('click', showSettingsModal);
+                closeSettingsButton.addEventListener('click', hideSettingsModal);
+                resetDataButton.addEventListener('click', showDeleteModal);
+                cancelDeleteButton.addEventListener('click', hideDeleteModal);
+                confirmDeleteButton.addEventListener('click', handleDeleteConfirm);
+
+                // Remove item flow
+                cancelRemoveButton.addEventListener('click', hideRemoveItemModal);
+                confirmRemoveButton.addEventListener('click', handleRemoveItemConfirm);
 
                 carbsTotalContainer.addEventListener('click', () => {
                     carbsModal.classList.remove('opacity-0', 'pointer-events-none');
@@ -1262,10 +1503,33 @@ All values should be numbers (integers). Do not return any text, explanation, or
                     detectionModal.classList.add('hidden');
                     quantityInput.value = '';
                 });
+
+                // Date picker and navigation
+                datePicker.addEventListener('change', (e) => {
+                    selectedDate = parseDate(e.target.value);
+                    renderUI();
+                });
+                prevDayButton.addEventListener('click', () => {
+                    selectedDate.setDate(selectedDate.getDate() - 1);
+                    datePicker.value = formatDate(selectedDate);
+                    renderUI();
+                });
+                nextDayButton.addEventListener('click', () => {
+                    selectedDate.setDate(selectedDate.getDate() + 1);
+                    datePicker.value = formatDate(selectedDate);
+                    renderUI();
+                });
                 
+                // View toggling
+                showTodayViewButton.addEventListener('click', showTodayView);
+                showHistoryViewButton.addEventListener('click', showHistoryView);
+
+                // Set initial date picker value
+                datePicker.value = formatDate(selectedDate);
+
                 // Load initial data and render
                 loadFromStorage();
-                renderUI();
+                showTodayView(); // Show today's view by default
                 
                 // Test environment setup
                 await testEnvironment();
@@ -1286,4 +1550,3 @@ All values should be numbers (integers). Do not return any text, explanation, or
     </script>
 </body>
 </html>
-

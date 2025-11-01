@@ -1120,16 +1120,44 @@
             /**
              * Loads data from localStorage into the state.
              */
+            const APP_VERSION = '1.0.0';
+
+            function runMigrations() {
+                console.log("Running data migrations...");
+                // Migration 1: Set missing dates
+                let dataWasModified = false;
+                foodItems.forEach(item => {
+                    if (!item.date) {
+                        item.date = formatDate(new Date());
+                        dataWasModified = true;
+                    }
+                });
+
+                if (dataWasModified) {
+                    console.log("Migration: Set missing dates to today.");
+                    saveToStorage();
+                }
+            }
+
+            function checkVersionAndMigrate() {
+                const storedVersion = localStorage.getItem('appVersion');
+                if (storedVersion !== APP_VERSION) {
+                    console.log(`Version mismatch: Stored=${storedVersion}, Current=${APP_VERSION}. Starting migration.`);
+                    runMigrations();
+                    localStorage.setItem('appVersion', APP_VERSION);
+                    console.log(`Migration complete. Updated stored version to ${APP_VERSION}.`);
+                } else {
+                    console.log("App version is up to date. No migration needed.");
+                }
+            }
+
+            /**
+             * Loads data from localStorage into the state.
+             */
             function loadFromStorage() {
                 const storedData = localStorage.getItem(STORAGE_KEY);
                 if (storedData) {
                     foodItems = JSON.parse(storedData);
-                    // Ensure all loaded items have a date, default to today if missing
-                    foodItems.forEach(item => {
-                        if (!item.date) {
-                            item.date = formatDate(new Date());
-                        }
-                    });
                 }
             }
 
@@ -1457,6 +1485,7 @@
 
                 // Load initial data and render
                 loadFromStorage();
+                checkVersionAndMigrate();
                 showTodayView(); // Show today's view by default
                 
                 // Test environment setup

@@ -323,23 +323,6 @@ Do not return any text, explanation, or markdown formatting around the JSON obje
     }
 });
 
-// Simple API key endpoint (minimal server processing)
-app.get('/api/get-api-key', (req, res) => {
-    try {
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            logError(new Error('GEMINI_API_KEY not found'), 'get-api-key');
-            return res.status(500).json({ error: 'API key not configured' });
-        }
-        
-        // Just return the API key - no heavy processing
-        res.json({ apiKey: apiKey });
-        
-    } catch (error) {
-        logError(error, 'get-api-key');
-        res.status(500).json({ error: 'Failed to get API key' });
-    }
-});
 
 // Test endpoint to verify environment setup
 app.get('/api/test-env', (req, res) => {

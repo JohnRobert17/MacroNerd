@@ -1412,10 +1412,61 @@
                 renderUI();
             }
 
+            async function generateMockData() {
+                console.log("Generating mock data...");
+                try {
+                    const response = await fetch('mock-data.json');
+                    const mockData = await response.json();
+                    
+                    let newItems = [];
+                    const today = new Date();
+
+                    for (let i = 0; i < 7; i++) {
+                        const date = new Date(today);
+                        date.setDate(today.getDate() - i);
+                        const formattedDate = formatDate(date);
+                        
+                        let dailyCalories = 0;
+                        const calorieTarget = 1800;
+                        let j = 0;
+
+                        while (dailyCalories < calorieTarget) {
+                            const mockItem = mockData[Math.floor(Math.random() * mockData.length)];
+                            const newItem = {
+                                ...mockItem,
+                                id: Date.now() + i * 1000 + j, // Unique ID
+                                date: formattedDate
+                            };
+                            newItems.push(newItem);
+                            dailyCalories += newItem.calories;
+                            j++;
+                        }
+                    }
+
+                    // Clear existing data and add mock data
+                    foodItems = newItems;
+                    saveToStorage();
+                    console.log("Mock data generated successfully.");
+
+                } catch (error) {
+                    console.error("Failed to generate mock data:", error);
+                }
+            }
+
             /**
              * Initializes the application.
              */
             async function init() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const shouldGenerateMockData = urlParams.get('generateMockData') === 'true';
+
+                if (shouldGenerateMockData) {
+                    await generateMockData();
+                    // Redirect to remove the URL parameter
+                    window.location.href = window.location.pathname;
+                    return; // Stop further execution to allow page to reload
+                }
+
                 // Fix mobile viewport issues first
                 fixMobileViewport();
                 // Attach event listeners

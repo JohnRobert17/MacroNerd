@@ -1,0 +1,167 @@
+[
+    {
+        "id": 10101002,
+        "query": "1 serving Chicken Adobo with 1 cup White Rice (approx. 400g total)",
+        "name": "Chicken Adobo with Rice (1 serving)",
+        "calories": 542,
+        "protein": 29,
+        "carbs": 59,
+        "fat": 20,
+        "sugar": 2,
+        "starch": 53
+    },
+    {
+        "id": 10101003,
+        "query": "1 cup Pork Sinigang with 1 cup White Rice (approx. 450g total)",
+        "name": "Pork Sinigang with Rice (1 cup)",
+        "calories": 532,
+        "protein": 38,
+        "carbs": 63,
+        "fat": 47,
+        "sugar": 2,
+        "starch": 57
+    },
+    {
+        "id": 10101004,
+        "query": "1 piece Banana Cue (Saba banana with caramelized sugar)",
+        "name": "Banana Cue (1 piece)",
+        "calories": 165,
+        "protein": 1,
+        "carbs": 35,
+        "fat": 3,
+        "sugar": 19,
+        "starch": 16
+    },
+    {
+        "id": 10101005,
+        "query": "1 cup Lugaw Plain (Rice Porridge, approx. 185g)",
+        "name": "Lugaw Plain (1 cup)",
+        "calories": 138,
+        "protein": 1,
+        "carbs": 28,
+        "fat": 1,
+        "sugar": 0,
+        "starch": 28
+    },
+    {
+        "id": 10101006,
+        "query": "1 cup Ginataang Kalabasa at Sitaw (approx. 200g)",
+        "name": "Ginataang Kalabasa at Sitaw (1 cup)",
+        "calories": 225,
+        "protein": 0,
+        "carbs": 8,
+        "fat": 14,
+        "sugar": 5,
+        "starch": 3
+    },
+    {
+        "id": 10101007,
+        "query": "1 pc Small Pandesal (approx. 35g)",
+        "name": "Pandesal (1 small piece)",
+        "calories": 115,
+        "protein": 3,
+        "carbs": 21,
+        "fat": 2,
+        "sugar": 2,
+        "starch": 19
+    },
+    {
+        "id": 10101008,
+        "query": "1 cup Fresh Buko Juice (Coconut Water, no sugar added)",
+        "name": "Fresh Buko Juice (1 cup)",
+        "calories": 45,
+        "protein": 0,
+        "carbs": 9,
+        "fat": 0,
+        "sugar": 7,
+        "starch": 0
+    },
+    {
+        "id": 10101009,
+        "query": "1 cup Sago't Gulaman (with brown sugar syrup)",
+        "name": "Sago't Gulaman (1 cup)",
+        "calories": 250,
+        "protein": 0,
+        "carbs": 63,
+        "fat": 0,
+        "sugar": 52,
+        "starch": 11
+    },
+    {
+        "id": 10101010,
+        "query": "1 cup Water (240ml)",
+        "name": "Water (1 cup)",
+        "calories": 0,
+        "protein": 0,
+        "carbs": 0,
+        "fat": 0,
+        "sugar": 0,
+        "starch": 0
+    },
+    {
+        "id": 10101011,
+        "query": "2 large eggs (boiled/fried without added oil)",
+        "name": "2 Large Eggs",
+        "calories": 156,
+        "protein": 13,
+        "carbs": 1,
+        "fat": 11,
+        "sugar": 1,
+        "starch": 0
+    },
+    {
+        "id": 10101012,
+        "query": "100g raw/cooked Chicken Breast (skinless, boneless)",
+        "name": "Chicken Breast (100g)",
+        "calories": 165,
+        "protein": 31,
+        "carbs": 0,
+        "fat": 4,
+        "sugar": 0,
+        "starch": 0
+    },
+    {
+        "id": 10101013,
+        "query": "1 medium Apple (approx. 182g)",
+        "name": "Apple (1 medium)",
+        "calories": 95,
+        "protein": 0,
+        "carbs": 25,
+        "fat": 0,
+        "sugar": 19,
+        "starch": 4
+    },
+    {
+        "id": 10101014,
+        "query": "1 cup Dry Rolled Oats (approx. 80g)",
+        "name": "Oats (1 cup dry)",
+        "calories": 307,
+        "protein": 11,
+        "carbs": 55,
+        "fat": 5,
+        "sugar": 1,
+        "starch": 47
+    },
+    {
+        "id": 10101015,
+        "query": "200g cooked Salmon Fillet (Wild Atlantic, dry heat)",
+        "name": "Salmon Fillet (200g cooked)",
+        "calories": 364,
+        "protein": 51,
+        "carbs": 0,
+        "fat": 16,
+        "sugar": 0,
+        "starch": 0
+    },
+    {
+        "id": 10101016,
+        "query": "1 cup cooked Broccoli (boiled/steamed)",
+        "name": "Broccoli (1 cup cooked)",
+        "calories": 22,
+        "protein": 2,
+        "carbs": 4,
+        "fat": 0,
+        "sugar": 1,
+        "starch": 1
+    }
+]

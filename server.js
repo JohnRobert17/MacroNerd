@@ -107,7 +107,7 @@ app.post('/api/get-macros', async (req, res) => {
             return res.status(500).json({ error: 'API key not configured' });
         }
 
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
         const systemPrompt = `You are a nutrition expert. The user will provide a food query. You must analyze the query, calculate the total nutritional information, and return *ONLY* a single JSON object with the following exact structure:
 {
